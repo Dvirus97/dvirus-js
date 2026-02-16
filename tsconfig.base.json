@@ -15,7 +15,8 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@dvirus-js/angular/signals": ["packages/angular/signals/src/index.ts"]
+      "@dvirus-js/angular/signals": ["packages/angular/signals/src/index.ts"],
+      "@dvirus-js/utils": ["packages/utils/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
