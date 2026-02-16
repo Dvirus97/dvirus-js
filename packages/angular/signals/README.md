@@ -23,6 +23,8 @@ This package provides a type-safe, reactive forms library for Angular, built on 
   - `object-type.ts`: Generic object type utility.
   - `signal-notifier.ts`: Signal-based notification utility.
   - `signals.utils.ts`: Helpers for working with signals and signal objects.
+- **directives/**: Angular directives for signal-based UI behaviors.
+  - `click-outside.directive.ts`: Emits an event when a click occurs outside the host element or a group of elements.
 
 ## Usage Example
 
@@ -89,6 +91,24 @@ const maybeSignal2: SignalOrValue<number> = signal(3);
 const value1 = signalOrValue(maybeSignal1); // 5
 const value2 = signalOrValue(maybeSignal2); // 3
 
+```
+
+## Directives Usage Example
+
+### `click-outside.directive.ts`
+
+```html
+<!-- Listen for clicks outside this div (and any group elements) -->
+<div (clickOutside)="onClickOutside($event)">
+  ...
+</div>
+```
+
+```typescript
+// In your component:
+onClickOutside(event: MouseEvent): void {
+  // Handle the outside click (e.g., close a popup)
+}
 ```
 
 ---
