@@ -1,6 +1,6 @@
 {
   "name": "@dvirus-js/source",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "license": "MIT",
   "scripts": {
     "-- create-angular-lib": "npx nx g @nx/angular:library <package name with path> --publishable --importPath=@dvirus-js/angular/<package name>",
@@ -8,6 +8,9 @@
     "-- create-ts-lib": "npx nx g @nx/js:library <package name with path> --publishable --importPath=@dvirus-js/<package name>"
   },
   "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@angular-devkit/core": "~21.1.0",
     "@angular-devkit/schematics": "~21.1.0",
