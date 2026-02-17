@@ -36,8 +36,5 @@
     "lint": {
       "executor": "@nx/eslint:lint"
     }
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }
