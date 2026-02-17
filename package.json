@@ -1,6 +1,6 @@
 {
   "name": "@dvirus-js/source",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "license": "MIT",
   "scripts": {
     "-- create-angular-lib": "npx nx g @nx/angular:library <package name with path> --publishable --importPath=@dvirus-js/angular/<package name>",
