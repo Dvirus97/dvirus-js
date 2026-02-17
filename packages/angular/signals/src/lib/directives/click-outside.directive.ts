@@ -12,7 +12,7 @@ import { Directive, effect, ElementRef, inject, input, output } from '@angular/c
  * - Useful for closing popups, dropdowns, or dialogs when clicking outside.
  */
 @Directive({
-  selector: '[clickOutside]',
+  selector: '[djsClickOutside]',
 })
 export class ClickOutsideDirective {
   /**
