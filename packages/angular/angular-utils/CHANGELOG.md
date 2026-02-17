@@ -1,3 +1,13 @@
+## 1.0.3 (2026-02-17)
+
+### 🩹 Fixes
+
+- angular-utils ([bdb6963](https://github.com/Dvirus97/dvirus-js/commit/bdb6963))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 1.0.2 (2026-02-17)
 
 ### 🩹 Fixes
