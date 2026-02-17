@@ -1,5 +1,5 @@
 {
-  "name": "@dvirus-js/angular/signals",
+  "name": "@dvirus-js/angular-signals",
   "version": "0.0.1",
   "peerDependencies": {
     "@angular/core": "^21.1.0"
