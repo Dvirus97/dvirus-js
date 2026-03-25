@@ -170,6 +170,7 @@ describe('signalDebounce', () => {
 
   describe('with params but outside injection context', () => {
     it('should fall back to simple signal and log an error', () => {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       const source = signal('source-value');
