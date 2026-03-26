@@ -49,10 +49,8 @@ export interface SignalMap<K = string, V = unknown> {
   clear: () => void;
   /** Returns a human-readable string, e.g. `SignalMap(a => 1, b => 2)`. */
   toString: () => string;
-  /** Serialises the map to a JSON object string. */
-  toJson: () => string;
-  /** Converts the map to a plain object `Record<K, V>`. */
-  toObject: () => Record<ToKey<K>, V>;
+  /** Converts the map to a JSON-compatible object. */
+  toJSON: () => Record<ToKey<K>, V>;
 }
 
 /**
@@ -72,7 +70,7 @@ export interface SignalMap<K = string, V = unknown> {
  * cache.set('c', 3);
  * console.log(cache.keys());   // ['a', 'b', 'c']
  * cache.delete('a');            // true
- * console.log(cache.toJson());  // '{"b":2,"c":3}'
+ * console.log(cache.toJSON());  // {b:2,c:3}
  * ```
  */
 export function signalMap<K = string, V = unknown>(
@@ -122,10 +120,7 @@ export function signalMap<K = string, V = unknown>(
         .map(([k, v]) => `${k} => ${v}`)
         .join(', ')})`;
     },
-    toJson: (): string => {
-      return JSON.stringify(Object.fromEntries(entries()));
-    },
-    toObject: (): Record<ToKey<K>, V> => {
+    toJSON: (): Record<ToKey<K>, V> => {
       return Object.fromEntries(entries());
     },
   };

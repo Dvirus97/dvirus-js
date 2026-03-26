@@ -25,8 +25,8 @@ export interface SignalSet<T = number> {
   clear: () => void;
   /** Returns a human-readable string representation, e.g. `SignalSet(1, 2, 3)`. */
   toString: () => string;
-  /** Serializes the set contents to a JSON array string. e.g. `[1, 2, "a"]` */
-  toJson: () => string;
+  /** Converts the set to a JSON-compatible array. e.g. `[1, 2, "a"]` */
+  toJSON: () => T[];
 }
 
 /**
@@ -89,8 +89,8 @@ export function signalSet<T = number>(initialValue: Iterable<T> = new Set<T>()):
     toString: (): string => {
       return `SignalSet(${toArray().join(', ')})`;
     },
-    toJson: (): string => {
-      return JSON.stringify(toArray());
+    toJSON: (): T[] => {
+      return toArray();
     },
   };
 }
