@@ -23,6 +23,12 @@ This package provides a type-safe, reactive forms library for Angular, built on 
   - `object-type.ts`: Generic object type utility.
   - `signal-notifier.ts`: Signal-based notification utility.
   - `signals.utils.ts`: Helpers for working with signals and signal objects.
+  - `signal-debounce.ts`: Writable signal with built-in debounce support and loading state.
+  - `signal-set.ts`: Reactive `Set` wrapper backed by Angular signals.
+  - `signal-map.ts`: Reactive `Map` wrapper backed by Angular signals.
+  - `signal-object.ts`: Reactive object proxy where each property is a signal.
+  - `control-signal.ts`: Bridges Angular Reactive Forms controls to signals (value, status, events).
+  - `try-catch.ts`: Synchronous try/catch wrapper returning a `[result, error]` tuple.
 - **directives/**: Angular directives for signal-based UI behaviors.
   - `click-outside.directive.ts`: Emits an event when a click occurs outside the host element or a group of elements.
 
@@ -91,6 +97,81 @@ const maybeSignal2: SignalOrValue<number> = signal(3);
 const value1 = signalOrValue(maybeSignal1); // 5
 const value2 = signalOrValue(maybeSignal2); // 3
 
+```
+
+### `signal-debounce.ts`
+
+```typescript
+import { signalDebounce } from '@dvirus-js/angular/signals';
+
+const search = signalDebounce<string>({ debounceTime: 300, initialValue: '' });
+search.setDebounced('hello'); // commits after 300 ms
+search.isLoading();           // true while pending
+```
+
+### `signal-set.ts`
+
+```typescript
+import { signalSet } from '@dvirus-js/angular/signals';
+
+const selected = signalSet<number>();
+selected.add(1);
+selected.toggle(2);
+console.log(selected.toArray()); // [1, 2]
+selected.toggle(1);
+console.log(selected.has(1));    // false
+// automatically works with JSON.stringify()
+console.log(cache.toJSON()); // [1, 2]
+
+```
+
+### `signal-map.ts`
+
+```typescript
+import { signalMap } from '@dvirus-js/angular/signals';
+
+const cache = signalMap<string, number>({ a: 1, b: 2 });
+cache.set('c', 3);
+console.log(cache.keys());   // ['a', 'b', 'c']
+cache.delete('a');            // true
+// automatically works with JSON.stringify()
+console.log(cache.toJSON()); // { b: 2, c: 3 }
+```
+
+### `signal-object.ts`
+
+```typescript
+import { signalObject } from '@dvirus-js/angular/signals';
+
+const person = signalObject({ name: 'dvirus', age: 30 });
+person.name;              // 'dvirus' (tracked by Angular reactivity)
+person['name'] = 'new';   // triggers reactive update
+const snapshot = person(); // { name: 'new', age: 30 } reactive
+```
+
+### `control-signal.ts`
+
+```typescript
+import { controlValueSignal } from '@dvirus-js/angular/signals';
+import { FormControl } from '@angular/forms';
+
+const ctrl = new FormControl('hello');
+const $ctrl$ = controlSignal(ctrl); // ControlSignal<string> that tracks ctrl changes
+
+effect(()=>{
+  $ctrl.value() // reactive
+  // $ctrl: value, valid, invalid, touched, dirty, errors, disabled
+})
+```
+
+### `try-catch.ts`
+
+```typescript
+import { tryCatch } from '@dvirus-js/angular/signals';
+
+const [result, error] = tryCatch(() => JSON.parse('{"a":1}'));
+if (error) { /* handle error */ }
+else { console.log(result); } // { a: 1 }
 ```
 
 ## Directives Usage Example

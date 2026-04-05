@@ -18,7 +18,20 @@
       "@dvirus-js/angular": ["packages/angular/angular-utils/src/index.ts"],
       "@dvirus-js/angular-signals": ["packages/angular/signals/src/index.ts"],
       "@dvirus-js/utils": ["packages/utils/src/index.ts"]
-    }
+    },
+    //
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "allowUnusedLabels": false,
+    "noUncheckedSideEffectImports": true,
+    "noFallthroughCasesInSwitch": true,
+    "allowUnreachableCode": false,
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "erasableSyntaxOnly": true,
+    "noImplicitOverride": true,
+    // "exactOptionalPropertyTypes": false,
+    "checkJs": true,
   },
   "exclude": ["node_modules", "tmp"]
 }
