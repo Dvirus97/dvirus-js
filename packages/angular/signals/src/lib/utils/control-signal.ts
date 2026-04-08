@@ -1,11 +1,7 @@
 import {
   computed,
   DestroyRef,
-  effect,
-  EffectRef,
   inject,
-  Injector,
-  isSignal,
   Signal,
   signal,
   untracked,
@@ -24,8 +20,6 @@ import {
 import { startWith, Subscription } from 'rxjs';
 import { tryCatch } from './try-catch';
 
-
-
 /**
  * A reactive signal-based wrapper around an `AbstractControl`, exposing
  * the control's state (value, status, touched, dirty, errors, etc.) as
@@ -35,7 +29,7 @@ import { tryCatch } from './try-catch';
  */
 export interface ControlSignal<T> {
   /** Signal returning the underlying `AbstractControl` instance. */
-  control: Signal<AbstractControl<T>>;
+  control: AbstractControl<T>;
   /** Signal returning the current value of the control. */
   value: Signal<T | null | undefined>;
   /** Signal returning the current validation status (`VALID`, `INVALID`, `PENDING`, `DISABLED`). */
@@ -66,34 +60,37 @@ export interface ControlSignal<T> {
  * Creates a {@link ControlSignal} that mirrors an `AbstractControl`'s
  * reactive state as Angular signals.
  *
- * When `control` is a plain `AbstractControl`, subscriptions are created
- * immediately. When `control` is a `Signal<AbstractControl>`, an `effect`
- * is used to re-subscribe whenever the signal value changes (requires an
- * injection context or `Injector` to be available).
+ * **Important:** If called outside an injection context, you must manually handle
+ * un-subscription by either:
+ * - Calling the `unsubscribe()` method on the returned {@link ControlSignal}, or
+ * - Passing a `DestroyRef` via the `options` parameter for automatic cleanup.
+ *
+ * If called within an injection context without providing a `DestroyRef`, the
+ * subscriptions will be automatically cleaned up on component destruction.
  *
  * @template T - The value type of the form control.
  * @param control - The form control or a signal wrapping one.
- * @param options - Optional `DestroyRef` and `Injector` used for
- *   automatic cleanup and effect scheduling.
+ * @param options - Optional configuration object containing:
+ *   - `destroyRef`: A `DestroyRef` used for automatic cleanup on destruction.
+ *     If not provided, the function will attempt to inject one from the current
+ *     injection context. If neither is available, manual un-subscription is required.
  * @returns A {@link ControlSignal} exposing the control's state as signals.
  * @throws If `control` is a signal and no `Injector` is available.
  */
 export function controlSignal<T>(
-  control: AbstractControl<T> | Signal<AbstractControl<T>>,
-  options?: { destroyRef?: DestroyRef; injector?: Injector },
+  control: AbstractControl<T>,
+  options?: { destroyRef?: DestroyRef },
 ): ControlSignal<T> {
-  const injector = options?.injector ?? tryCatch(() => inject(Injector))[0] ?? undefined;
   const destroyRef =
-    options?.destroyRef ??
-    tryCatch(() => inject(DestroyRef, { optional: true }))[0] ??
-    injector?.get(DestroyRef) ??
-    undefined;
+    options?.destroyRef ?? tryCatch(() => inject(DestroyRef, { optional: true }))[0];
 
-  const ctrlGetter = computed(() => (isSignal(control) ? control() : control));
-  const unsubscribe = (): void => subscriptions.forEach((s) => s.unsubscribe());
-
-  let effectRef: EffectRef | undefined = undefined;
-  const subscriptions: Subscription[] = [];
+  let subscriptions: Subscription[] = [];
+  const unsubscribe = (): void => {
+    subscriptions.forEach((s) => s.unsubscribe());
+    subscriptions = [];
+  };
+  // cleanUp
+  unsubscribe();
 
   const $value = signal<T | null | undefined>(undefined);
   const $status = signal<FormControlStatus | null | undefined>(undefined);
@@ -101,46 +98,25 @@ export function controlSignal<T>(
 
   let isDirty = false;
 
-  function subscribeToChanges(): void {
-    const ctrl = ctrlGetter();
+  subscriptions.push(
+    control.valueChanges
+      .pipe(startWith(control.value))
+      .subscribe((x) => untracked(() => $value.set(x))),
 
-    subscriptions.push(
-      ctrl.valueChanges
-        .pipe(startWith(ctrl.value))
-        .subscribe((x) => untracked(() => $value.set(x))),
+    control.statusChanges
+      .pipe(startWith(control.status))
+      .subscribe((x) => untracked(() => $status.set(x))),
 
-      ctrl.statusChanges
-        .pipe(startWith(ctrl.status))
-        .subscribe((x) => untracked(() => $status.set(x))),
+    control.events.subscribe((x) => untracked(() => $events.set(x))),
+  );
 
-      ctrl.events.subscribe((x) => untracked(() => $events.set(x))),
-    );
-
-    destroyRef?.onDestroy(() => unsubscribe());
-  }
-
-  if (isSignal(control)) {
-    if (!injector)
-      throw new Error(
-        'Injector is required in options when control is a signal to properly manage the effect lifecycle.',
-      );
-
-    effectRef = effect(
-      (cleanup) => {
-        subscribeToChanges();
-        cleanup(() => unsubscribe());
-      },
-      { injector: injector, allowSignalWrites: true },
-    );
-  } else {
-    subscribeToChanges();
-  }
+  destroyRef?.onDestroy(() => unsubscribe());
 
   const invalid = computed(() => $status() === 'INVALID');
   const disabled = computed(() => $status() === 'DISABLED');
   const valid = computed(() => $status() === 'VALID');
-  const touched = computed(() => ($events(), ctrlGetter().touched));
-  const errors = computed<ValidationErrors | null>(() => ($events(), ctrlGetter().errors));
+  const touched = computed(() => ($events(), control.touched));
+  const errors = computed<ValidationErrors | null>(() => ($events(), control.errors));
   const firstErrorKey = computed<string | null>(() => Object.keys(errors() ?? {})[0] ?? null);
   const touchedAndInvalid = computed(() => touched() && invalid());
   const dirty = computed(() => {
@@ -152,7 +128,7 @@ export function controlSignal<T>(
   });
 
   return {
-    control: ctrlGetter,
+    control: control,
     value: $value.asReadonly(),
     status: $status.asReadonly(),
     events: $events.asReadonly(),
@@ -164,26 +140,41 @@ export function controlSignal<T>(
     valid,
     dirty,
     firstErrorKey,
-    unsubscribe: (): void => {
-      unsubscribe();
-      effectRef?.destroy();
-    },
+    unsubscribe: (): void => unsubscribe(),
   };
 }
 
-// 
-
+/**
+ * Extends {@link ControlSignal} with a strongly-typed `controls` map,
+ * providing a `ControlSignal` for every control in the `FormGroup`.
+ *
+ * @template T - An object type whose keys correspond to the group's control names
+ *   and whose values are the respective control value types.
+ */
 export interface FormGroupSignal<T extends object> extends ControlSignal<T> {
+  /** A map of child control names to their individual {@link ControlSignal} instances. */
   controls: {
     [K in keyof T]: ControlSignal<T[K]>;
   };
 }
 
+/**
+ * Creates a {@link FormGroupSignal} for a `FormGroup` whose controls are
+ * all `FormControl` instances. Each child control is wrapped with
+ * {@link controlSignal}, and the group itself is also wrapped so its
+ * aggregate state is available as signals.
+ *
+ * @template T - An object type mapping control names to their value types.
+ * @param formGroup - The `FormGroup` to wrap.
+ * @param options - Optional `DestroyRef` and `Injector` forwarded to
+ *   each underlying {@link controlSignal} call.
+ * @returns A {@link FormGroupSignal} with both group-level and per-control signals.
+ * @throws If any control in the group is not a `FormControl` instance.
+ */
 export function formGroupSignal<T extends object>(
   formGroup: FormGroup<{ [K in keyof T]: FormControl<T[K]> }>,
-  options?: { destroyRef?: DestroyRef; injector?: Injector },
+  options?: { destroyRef?: DestroyRef },
 ): FormGroupSignal<T> {
-  const injector = options?.injector ?? tryCatch(() => inject(Injector))[0] ?? undefined;
   const destroyRef =
     options?.destroyRef ?? tryCatch(() => inject(DestroyRef, { optional: true }))[0] ?? undefined;
 
@@ -194,7 +185,7 @@ export function formGroupSignal<T extends object>(
           `All controls in the FormGroup must be instances of FormControl. Control '${key}' is not.`,
         );
       }
-      return [key, controlSignal(ctrl, { destroyRef, injector })];
+      return [key, controlSignal(ctrl, { destroyRef })];
     }),
   );
 

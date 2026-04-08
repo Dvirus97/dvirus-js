@@ -170,7 +170,8 @@ export function createSignalFormArray<TItem, TControls extends object = object>(
 ): SignalFormArray<TItem> {
   const accessControl =
     getControl ??
-    (((_key: keyof TControls) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (((_: keyof TControls) => {
       throw new Error('getControl is not available for this array.');
     }) as ControlAccessor<TControls>);
 
