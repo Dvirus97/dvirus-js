@@ -3,12 +3,22 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: write
+
 jobs:
-  publish:
+  release:
+    # Skip release commits to avoid infinite loop
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(release)') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-        with: { fetch-depth: 0 }
+        with:
+          fetch-depth: 0
+          # Use a PAT so the version commit can be pushed to protected main branch
+          # and so the pushed commit triggers subsequent workflows
+          token: ${{ secrets.GH_PAT }}
+
       - uses: actions/setup-node@v5
         with:
           node-version: 22
@@ -21,8 +31,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # This command versions, tags, and publishes to NPM
-      - run: npx nx release --yes
+      # Version + changelog + commit + tag (no publish yet)
+      - run: npx nx release --skip-publish --yes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+
+      # Push version commit and tags back to main
+      - run: git push --follow-tags
+
+      # Publish to npm
+      - run: npx nx release publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

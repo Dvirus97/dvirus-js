@@ -1,6 +1,6 @@
 {
   "name": "@dvirus-js/angular",
-  "version": "0.0.1",
+  "version": "1.0.3",
   "peerDependencies": {
     "@angular/core": "^21.1.0",
     "@angular/forms": "^21.1.0"
