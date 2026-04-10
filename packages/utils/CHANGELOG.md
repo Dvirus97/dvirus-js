@@ -1,3 +1,17 @@
+## 1.1.0 (2026-04-10)
+
+### 🚀 Features
+
+- add signals implementation and controlSignal to angular ([58ea6f5](https://github.com/Dvirus97/dvirus-js/commit/58ea6f5))
+
+### 🩹 Fixes
+
+- build ([5c87b77](https://github.com/Dvirus97/dvirus-js/commit/5c87b77))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 1.0.3 (2026-02-17)
 
 This was a version bump only for utils to align it with other projects, there were no code changes.

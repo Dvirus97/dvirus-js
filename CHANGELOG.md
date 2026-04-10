@@ -1,3 +1,23 @@
+## 1.1.0 (2026-04-10)
+
+### 🚀 Features
+
+- add signal based map and set ([3642815](https://github.com/Dvirus97/dvirus-js/commit/3642815))
+- add signal-object ([095ac09](https://github.com/Dvirus97/dvirus-js/commit/095ac09))
+- add signals implementation and controlSignal to angular ([58ea6f5](https://github.com/Dvirus97/dvirus-js/commit/58ea6f5))
+
+### 🩹 Fixes
+
+- add signal debounce ([eba1d96](https://github.com/Dvirus97/dvirus-js/commit/eba1d96))
+- change action v4 -> v5 ([b90ee4e](https://github.com/Dvirus97/dvirus-js/commit/b90ee4e))
+- lint ([95c0251](https://github.com/Dvirus97/dvirus-js/commit/95c0251))
+- add peer deps ([04da698](https://github.com/Dvirus97/dvirus-js/commit/04da698))
+- build ([5c87b77](https://github.com/Dvirus97/dvirus-js/commit/5c87b77))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 1.0.3 (2026-02-17)
 
 ### 🩹 Fixes
