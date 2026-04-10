@@ -41,6 +41,11 @@
     "changelog": {
       "automaticFromRef": true,
       "projectChangelogs": true
+    },
+    "git": {
+      "commit": true,
+      "commitMessage": "chore(release): v{version}",
+      "tag": true
     }
   },
   "generators": {
