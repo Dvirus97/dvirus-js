@@ -17,7 +17,7 @@ jobs:
           fetch-depth: 0
           # Use a PAT so the version commit can be pushed to protected main branch
           # and so the pushed commit triggers subsequent workflows
-          token: ${{ secrets.GH_PAT }}
+          token: ${{ secrets.GH_PAT || github.token }}
 
       - uses: actions/setup-node@v5
         with:
@@ -32,7 +32,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       # Version + changelog + commit + tag (no publish yet)
-      - run: npx nx release --skip-publish --yes
+      - run: npx nx release --skip-publish
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
 
