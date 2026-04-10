@@ -75,7 +75,7 @@ export function convertCase(input: string, caseType: CaseType): string {
       const words = normalized.split(' ');
       if (words.length === 0) return '';
       return (
-        words[0].toLowerCase() +
+        words[0]?.toLowerCase() +
         words
           .slice(1)
           .map(

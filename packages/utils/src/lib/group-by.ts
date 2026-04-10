@@ -10,12 +10,12 @@
  */
 export function groupBy<T>(
   value: T[],
-  keyGetter: (item: T, index: number, array: T[]) => string | number,
+  keyGetter: (item: T, index: number, array: T[]) => string | number | { toString: () => string },
 ): Record<string, T[]> {
   const groups: Record<string, T[]> = {};
 
   value?.forEach((item, index) => {
-    const key = keyGetter(item, index, value);
+    const key = keyGetter(item, index, value)?.toString();
     if (key) {
       groups[key] ??= [];
       groups[key].push(item);
@@ -23,3 +23,30 @@ export function groupBy<T>(
   });
   return groups;
 }
+
+
+// function main(): void{
+//   const data = [
+//     { name: 'Alice', age: 30 },
+//     { name: 'Bob', age: 25 },
+//     { name: 'Charlie', age: 30 },
+//     { name: 'David', age: 25 },
+//   ];
+
+//   const groupedByAge = groupBy(data, item => item.age);
+//   console.log(groupedByAge); 
+//   
+//   
+//   # Output:
+//   {
+//     '25': [
+//       { name: 'Bob', age: 25 },
+//       { name: 'David', age: 25 }
+//     ],
+//     '30': [
+//       { name: 'Alice', age: 30 },
+//       { name: 'Charlie', age: 30 }
+//     ]
+//   }
+//   
+// }

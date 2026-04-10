@@ -239,14 +239,14 @@ export function createSignalFormControl<TControls extends object, TValue>(
   const firstError = computed<FirstError<'error'>>(() => {
     const entries = Object.entries(errors());
     if (!entries.length) return undefined;
-    const [name, message] = entries[0];
+    const [name, message] = entries[0] ?? ['', ''];
     return { name, message, type: 'error' };
   });
 
   const firstWarning = computed<FirstError<'warning'>>(() => {
     const entries = Object.entries(warnings());
     if (!entries.length) return undefined;
-    const [name, message] = entries[0];
+    const [name, message] = entries[0] ?? ['', ''];
     return { name, message, type: 'warning' };
   });
 
