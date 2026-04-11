@@ -1,11 +1,11 @@
 import {
   DestroyRef,
+  effect,
   inject,
-  linkedSignal,
-  resource,
-  ResourceStreamItem,
+  Injector,
   Signal,
   signal,
+  untracked,
   WritableSignal,
 } from '@angular/core';
 import { tryCatch } from './try-catch';
@@ -27,27 +27,6 @@ export interface SignalDebounce<T> extends WritableSignal<T> {
 }
 
 /**
- * Internal parameter bag shared between `setDebounced` and `getSig` helpers.
- *
- * @typeParam T - The type of the debounced value.
- * @internal
- */
-interface _SignalDebounceParams<T> {
-  /** The writable signal to push the debounced value into, or `undefined` when no reactive source is provided. */
-  signal: WritableSignal<T> | undefined;
-  /** Delay in milliseconds before the value is committed. */
-  debounceTime: number;
-  /** Holds the active `setTimeout` handle so it can be cleared on subsequent calls. */
-  timeout: WritableSignal<ReturnType<typeof setTimeout> | null>;
-  /** Reactive loading flag toggled around the debounce window. */
-  isLoading: WritableSignal<boolean>;
-  /** The value to commit once the debounce delay elapses. */
-  value: T;
-  /** Optional callback executed after the debounced value has been committed. */
-  then?: () => void;
-}
-
-/**
  * Creates a debounced writable signal.
  *
  * The returned signal can be written to instantly via its `WritableSignal` interface
@@ -64,6 +43,9 @@ interface _SignalDebounceParams<T> {
  * @param options.debounceTime - Delay in milliseconds before a debounced value
  *   is committed.
  * @param options.initialValue - Optional initial value for the signal.
+ * @param options.injector - Optional Angular `Injector` to use for setting up
+ *   reactive tracking. Required if `params` is provided and this function is called
+ *   outside of an injection context.
  * @returns A `SignalDebounce<T>` instance.
  *
  * @example
@@ -81,129 +63,87 @@ export function signalDebounce<T>(options: {
   params?: () => T;
   debounceTime: number;
   initialValue?: T;
+  injector?: unknown;
 }): SignalDebounce<T> {
   const timeout = signal<ReturnType<typeof setTimeout> | null>(null);
   const isLoading = signal(false);
+  const _sig = signal(options.initialValue) as WritableSignal<T>;
 
-  const _sig = getSig({
-    signal: options.params ? linkedSignal(() => options.params?.()) : undefined,
-    debounceTime: options.debounceTime,
-    timeout: timeout,
-    value: options.initialValue,
-    isLoading: isLoading,
-  });
-
-  const _setDebounced = (value: T): void => {
-    setDebounced({
-      signal: _sig,
-      value,
-      timeout,
-      debounceTime: options.debounceTime,
-      isLoading: isLoading,
-    });
+  const scheduleDebounce = (value: T): void => {
+    clearPendingTimeout(timeout);
+    isLoading.set(true);
+    timeout.set(
+      setTimeout(() => {
+        isLoading.set(false);
+        _sig.set(value);
+      }, options.debounceTime),
+    );
   };
 
+  if (options.params) {
+    trackSource(options.params, scheduleDebounce, timeout, options.injector as Injector);
+  }
+
   return Object.assign(_sig, {
-    setDebounced: _setDebounced,
-    isLoading: isLoading,
+    setDebounced: scheduleDebounce,
+    isLoading: isLoading.asReadonly(),
   }) as SignalDebounce<T>;
 }
 
 /**
- * Schedules a debounced write to the target signal.
- *
- * Cancels any previously pending timeout, sets `isLoading` to `true`, and starts
- * a new `setTimeout`. When the timer fires the value is committed to the signal,
- * `isLoading` is reset to `false`, and the optional `then` callback is invoked.
- *
- * @typeParam T - The type of the debounced value.
- * @param params - The internal debounce parameter bag.
+ * Clears a pending debounce timeout if one exists.
  * @internal
  */
-function setDebounced<T>(params: _SignalDebounceParams<T>): void {
-  const t = params.timeout();
-  if (t) {
-    clearTimeout(t);
-  }
-  params.isLoading.set(true);
-  const timeout = setTimeout(() => {
-    params.isLoading.set(false);
-    if (params.value != undefined) {
-      params.signal?.set(params.value);
-    }
-    if (params.then) {
-      params.then();
-    }
-  }, params.debounceTime);
-
-  params.timeout.set(timeout);
+function clearPendingTimeout(
+  timeout: WritableSignal<ReturnType<typeof setTimeout> | null>,
+): void {
+  const t = timeout();
+  if (t) clearTimeout(t);
 }
 
 /**
- * Resolves the underlying writable signal used by `signalDebounce`.
+ * Sets up an effect that tracks a reactive source and debounces its changes.
  *
- * - If no reactive source (`options.signal`) is provided, a plain `signal()` is
- *   returned initialized with `options.value`.
- * - If a source is provided but there is no injection context (i.e. `DestroyRef`
- *   cannot be injected), a warning is logged and a plain `signal()` is returned.
- * - Otherwise a `resource`-backed signal is created that tracks upstream changes,
- *   debounces them, and exposes the latest committed value via a `linkedSignal`.
+ * Requires an Angular injection context. If called outside one, logs a warning
+ * and returns without setting up tracking (manual `setDebounced` still works).
  *
- * @typeParam T - The type of the signal's value.
- * @param options - The internal debounce parameter bag.
- * @returns A `WritableSignal<T>` that reflects the debounced value.
+ * @typeParam T - The type of the source value.
+ * @param source - Reactive function to track.
+ * @param scheduleDebounce - Callback that schedules a debounced write.
+ * @param timeout - Shared timeout handle for cleanup on destroy.
  * @internal
  */
-function getSig<T>(options: _SignalDebounceParams<T>): WritableSignal<T> {
-  if (!options.signal) {
-    return signal(options.value) as WritableSignal<T>;
-  }
-
-  if (!isInInjectionContext()) {
+function trackSource<T>(
+  source: () => T,
+  scheduleDebounce: (value: T) => void,
+  timeout: WritableSignal<ReturnType<typeof setTimeout> | null>,
+  injector?: Injector,
+): void {
+  if (!isInInjectionContext() && !injector) {
     console.error(
       'Warning: signalDebounce is being used outside of an injection context. The debounced signal will not update based on the provided signal.\n\n',
-      "Still Can be used with manual value updates via setDebounced, but won't react to changes in the provided signal.",
+      "Still can be used with manual value updates via setDebounced, but won't react to changes in the provided signal.",
     );
-    return signal(options.value) as WritableSignal<T>;
+    return;
   }
 
-  const resSignal = signal<ResourceStreamItem<T | undefined>>({
-    value: options.value,
-  });
-  const res = resource({
-    params: () => ({ val: options.signal?.() }),
-    stream: ({ params }) => {
-      setDebounced({
-        signal: linkedSignal(() => {
-          const _s = resSignal();
-          return 'value' in _s ? _s.value : undefined;
-        }),
-        value: params.val,
-        timeout: options.timeout,
-        debounceTime: options.debounceTime,
-        isLoading: options.isLoading,
-        then: () => {
-          resSignal.set({ value: params.val });
-        },
-      });
+  const _injector = injector ?? inject(Injector);
+  const destroyRef = _injector.get(DestroyRef) ?? inject(DestroyRef);
 
-      return Promise.resolve(resSignal);
-    },
-  });
+  effect(() => {
+    const val = source();
+    untracked(() => scheduleDebounce(val));
+  }, { injector: _injector });
 
-  return linkedSignal(() => res.value()) as WritableSignal<T>;
+  destroyRef.onDestroy(() => clearPendingTimeout(timeout));
 }
 
 /**
- *  Helper function to determine if the current execution context has access to Angular's dependency injection.
- *
- * This is used to conditionally create a resource-backed signal that tracks upstream changes.
- * If there is no injection context (e.g. the function is called outside of a component or service),
- * we fall back to a simple signal and log a warning.
- * @returns A boolean indicating whether the current execution context has access to Angular's dependency injection.
+ * Checks if the current execution context has access to Angular's dependency injection.
+ * @returns `true` when inside an injection context, `false` otherwise.
+ * @internal
  */
 function isInInjectionContext(): boolean {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_, error] = tryCatch(() => inject(DestroyRef));
+  const [, error] = tryCatch(() => inject(DestroyRef));
   return !error;
 }

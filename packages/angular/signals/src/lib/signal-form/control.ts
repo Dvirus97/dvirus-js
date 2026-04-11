@@ -1,4 +1,4 @@
-import { computed, isSignal, linkedSignal, signal } from '@angular/core';
+import { computed, isSignal, signal } from '@angular/core';
 import {
   fromSignalObj,
   SignalOrValue,
@@ -17,6 +17,7 @@ import {
   SignalFormDisabledFn,
   SignalFormSetValueOptions,
 } from './types';
+import { writableSignal } from './writable-signal';
 
 /**
  * Internal type for accessing sibling controls in a form.
@@ -188,11 +189,11 @@ export function createSignalFormControl<TControls extends object, TValue>(
     }) as ControlAccessor<TControls>);
 
   const initialValue = resolveControlValue(config.value);
-  const value = linkedSignal(() => resolveControlValue(config.value));
+  const value = writableSignal(() => resolveControlValue(config.value));
   const manualErrors = signal<Record<string, string>>({});
   const manualWarnings = signal<Record<string, string>>({});
-  const selfTouched = linkedSignal(() => false);
-  const selfDirty = linkedSignal(() => false);
+  const selfTouched = signal(false);
+  const selfDirty = signal(false);
   const selfDisabled = signal(false);
 
   const disabledResolver = config.disabled;

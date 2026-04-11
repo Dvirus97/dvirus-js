@@ -10,11 +10,7 @@ import {
   FormControl,
   FormGroup,
   AbstractControl,
-  ControlEvent,
   FormControlStatus,
-  FormResetEvent,
-  PristineChangeEvent,
-  StatusChangeEvent,
   ValidationErrors,
 } from '@angular/forms';
 import { startWith, Subscription } from 'rxjs';
@@ -34,8 +30,9 @@ export interface ControlSignal<T> {
   value: Signal<T | null | undefined>;
   /** Signal returning the current validation status (`VALID`, `INVALID`, `PENDING`, `DISABLED`). */
   status: Signal<FormControlStatus | null | undefined>;
-  /** Signal returning the most recent `ControlEvent` emitted by the control. */
-  events: Signal<ControlEvent<T> | null | undefined>;
+  /** Signal returning the most recent control event (Angular v18+), or `null` on older versions. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  events: Signal<any>;
   /** Signal that is `true` when the control status is `DISABLED`. */
   disabled: Signal<boolean>;
   /** Signal that is `true` when the control status is `VALID`. */
@@ -78,7 +75,7 @@ export interface ControlSignal<T> {
  * @throws If `control` is a signal and no `Injector` is available.
  */
 export function controlSignal<T>(
-  control: AbstractControl<T>,
+  control: AbstractControl<T>| FormControl<T>,
   options?: { destroyRef?: DestroyRef },
 ): ControlSignal<T> {
   const destroyRef =
@@ -95,36 +92,38 @@ export function controlSignal<T>(
 
   const $value = signal<T | null | undefined>(undefined);
   const $status = signal<FormControlStatus | null | undefined>(undefined);
-  const $events = signal<ControlEvent<T> | null | undefined>(undefined);
-
-  let isDirty = false;
+  // Incremented on every value/status change to trigger reactivity for
+  // properties that are read directly from the control (touched, dirty, errors).
+  const $tick = signal(0);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const $events = signal<any>(undefined);
 
   subscriptions.push(
     control.valueChanges
       .pipe(startWith(control.value))
-      .subscribe((x) => untracked(() => $value.set(x))),
+      .subscribe((x) => untracked(() => { $value.set(x); $tick.update(v => v + 1); })),
 
     control.statusChanges
       .pipe(startWith(control.status))
-      .subscribe((x) => untracked(() => $status.set(x))),
-
-    control.events.subscribe((x) => untracked(() => $events.set(x))),
+      .subscribe((x) => untracked(() => { $status.set(x); $tick.update(v => v + 1); })),
   );
+
+  // Subscribe to control.events if available (Angular v18+)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ctrl = control as any;
+  if (ctrl.events && typeof ctrl.events.subscribe === 'function') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    subscriptions.push(ctrl.events.subscribe((x: any) => untracked(() => { $events.set(x); $tick.update(v => v + 1); })));
+  }
 
   const invalid = computed(() => $status() === 'INVALID');
   const disabled = computed(() => $status() === 'DISABLED');
   const valid = computed(() => $status() === 'VALID');
-  const touched = computed(() => ($events(), control.touched));
-  const errors = computed<ValidationErrors | null>(() => ($events(), control.errors));
+  const touched = computed(() => { $tick(); $events(); return control.touched; });
+  const errors = computed<ValidationErrors | null>(() => { $tick(); $events(); return control.errors; });
   const firstErrorKey = computed<string | null>(() => Object.keys(errors() ?? {})[0] ?? null);
   const touchedAndInvalid = computed(() => touched() && invalid());
-  const dirty = computed(() => {
-    const events = $events();
-    if (events instanceof StatusChangeEvent) isDirty = true;
-    if (events instanceof PristineChangeEvent) isDirty = !events.pristine;
-    if (events instanceof FormResetEvent) isDirty = false;
-    return isDirty;
-  });
+  const dirty = computed(() => { $tick(); $events(); return control.dirty; });
 
   return {
     control: control,
