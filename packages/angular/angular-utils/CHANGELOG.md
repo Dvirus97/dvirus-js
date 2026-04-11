@@ -1,3 +1,13 @@
+## 1.1.1 (2026-04-11)
+
+### 🩹 Fixes
+
+- change version ([cbd35da](https://github.com/Dvirus97/dvirus-js/commit/cbd35da))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 1.1.0 (2026-04-10)
 
 This was a version bump only for angular-utils to align it with other projects, there were no code changes.
