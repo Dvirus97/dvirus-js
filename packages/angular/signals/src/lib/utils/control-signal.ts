@@ -2,7 +2,6 @@ import {
   computed,
   DestroyRef,
   inject,
-  linkedSignal,
   Signal,
   signal,
   untracked,
@@ -17,6 +16,7 @@ import {
 } from '@angular/forms';
 import { Observable, startWith, Subscription } from 'rxjs';
 import { tryCatch } from './try-catch';
+import { writableSignal } from './writable-signal';
 
 interface ControlEvent<T> {
   /**
@@ -118,7 +118,7 @@ export function controlSignal<
   const $value = signal<T | null | undefined>(undefined);
   const $status = signal<FormControlStatus | null | undefined>(undefined);
   const _events = signal<ControlEvent<T> | null>(null);
-  const $events = linkedSignal<ControlEvent<T> | null | undefined>(() => {
+  const $events = writableSignal<ControlEvent<T> | null | undefined>(() => {
     $value();
     $status();
     return _events();
