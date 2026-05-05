@@ -40,7 +40,7 @@ export type TryResult<T, E = Error> = [T, null] | [null, E];
  * @param {Promise<T>} promise - The promise to handle
  * @returns {Promise<TryResult<T, E>>} - A promise that resolves to a tuple with either the result or the error
  */
-export async function tryCatch<T, E = Error>(promise: Promise<T>): Promise<TryResult<T, E>> {
+export async function tryCatchAsync<T, E = Error>(promise: Promise<T>): Promise<TryResult<T, E>> {
     try {
         const val = await promise;
         return [val, null];
@@ -48,6 +48,23 @@ export async function tryCatch<T, E = Error>(promise: Promise<T>): Promise<TryRe
         return [null, error as E];
     }
 }
+
+/**
+ * Main wrapper function to handle promise with try-catch
+ * @template T - Type of the successful result
+ * @template E - Type of the error, defaults to Error
+ * @param {()=> T} fn - The function to handle
+ * @returns {TryResult<T, E>} - A tuple with either the result or the error
+ */
+export function tryCatch<T, E = Error>(fn: () => T): TryResult<T, E> {
+  try {
+    const val = fn();
+    return [val, null];
+  } catch (error) {
+    return [null, error as E];
+  }
+}
+
 
 // usage
 async function main() {
@@ -57,7 +74,7 @@ async function main() {
         }
         return 5;
     }  
-    const [data, error] = await tryCatch(foo());
+    const [data, error] = await tryCatchAsync(foo());
     if (error) {
         console.log(error?.message);
         return;

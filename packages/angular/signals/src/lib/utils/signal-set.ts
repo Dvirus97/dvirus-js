@@ -1,4 +1,5 @@
-import { computed, Signal, signal } from '@angular/core';
+import { computed, Signal, } from '@angular/core';
+import { writableSignal } from './writable-signal';
 
 /**
  * A reactive wrapper around a `Set` backed by Angular signals.
@@ -8,9 +9,9 @@ import { computed, Signal, signal } from '@angular/core';
  */
 export interface SignalSet<T = number> {
   /** The current underlying `Set` (read via signal). */
-  value: Set<T>;
+  (): Set<T>;
   /** The number of elements in the set (reactive). */
-  size: number;
+  size: Signal<number>;
   /** A computed signal that returns the set contents as an array. */
   toArray: Signal<T[]>;
   /** Adds the element if absent, removes it if present. */
@@ -48,18 +49,18 @@ export interface SignalSet<T = number> {
  * console.log(selected.has(1));    // false
  * ```
  */
-export function signalSet<T = number>(initialValue: Iterable<T> = new Set<T>()): SignalSet<T> {
-  const setSignal = signal(new Set(initialValue));
+export function signalSet<T = number>(
+  initialValue: Iterable<T> | (() => Iterable<T>) = new Set<T>(),
+): SignalSet<T> {
+  // writableSignal = linkedSignal 
+  const setSignal = writableSignal(
+    () => new Set(typeof initialValue === 'function' ? initialValue() : initialValue),
+  );
   const toArray = computed(() => Array.from(setSignal()));
 
-  return {
+  return Object.assign(() => setSignal(), {
     toArray,
-    get value(): Set<T> {
-      return setSignal();
-    },
-    get size(): number {
-      return setSignal().size;
-    },
+    size: computed(() => setSignal().size),
     toggle: (id: T): void => {
       setSignal.update((set) => {
         const next = new Set(set);
@@ -83,8 +84,8 @@ export function signalSet<T = number>(initialValue: Iterable<T> = new Set<T>()):
         return next;
       });
     },
-    clear: (): void => {
-      setSignal.set(new Set());
+    clear: (values?: Iterable<T>): void => {
+      setSignal.set(new Set(values));
     },
     toString: (): string => {
       return `SignalSet(${toArray().join(', ')})`;
@@ -92,5 +93,5 @@ export function signalSet<T = number>(initialValue: Iterable<T> = new Set<T>()):
     toJSON: (): T[] => {
       return toArray();
     },
-  };
+  });
 }

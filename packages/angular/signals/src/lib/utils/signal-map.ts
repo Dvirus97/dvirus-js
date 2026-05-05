@@ -1,4 +1,5 @@
-import { computed, Signal, signal } from '@angular/core';
+import { computed, Signal } from '@angular/core';
+import { writableSignal } from './writable-signal';
 
 /**
  * Resolves `T` to itself when it is a valid object key (`string | number | symbol`),
@@ -11,7 +12,9 @@ type ToKey<T> = T extends string | number | symbol ? T : string;
  * @param value Iterable<[K, V]> or Record<ToKey<K>, V>
  * @returns Iterable<[K, V]>
  */
-function getIterable<K, V>(value: Iterable<[K, V]> | Record<ToKey<K>, V>): Iterable<[K, V]> {
+function getIterable<K, V>(
+  value: Iterable<[K, V]> | Record<ToKey<K>, V>,
+): Iterable<[K, V]> {
   if (Symbol.iterator in Object(value)) {
     return value as Iterable<[K, V]>;
   } else {
@@ -28,9 +31,9 @@ function getIterable<K, V>(value: Iterable<[K, V]> | Record<ToKey<K>, V>): Itera
  */
 export interface SignalMap<K = string, V = unknown> {
   /** The current underlying `Map` (read via signal). */
-  value: Map<K, V>;
+  (): Map<K, V>;
   /** The number of entries in the map (reactive). */
-  size: number;
+  size: Signal<number>;
   /** A computed signal that returns the map keys as an array. */
   keys: Signal<K[]>;
   /** A computed signal that returns the map values as an array. */
@@ -74,25 +77,28 @@ export interface SignalMap<K = string, V = unknown> {
  * ```
  */
 export function signalMap<K = string, V = unknown>(
-  initialValue: Iterable<[K, V]> | Record<ToKey<K>, V> = new Map<K, V>(),
+  initialValue:
+    | Iterable<[K, V]>
+    | Record<ToKey<K>, V>
+    | (() => Iterable<[K, V]> | Record<ToKey<K>, V>) = new Map<K, V>(),
 ): SignalMap<K, V> {
-  const init = getIterable(initialValue);
-
-  const mapSignal = signal(new Map<K, V>(init));
+  // writableSignal = linkedSignal 
+  const mapSignal = writableSignal(() => {
+    const _val =
+      typeof initialValue === 'function' ? initialValue() : initialValue;
+    const init = getIterable(_val);
+    return new Map<K, V>(init);
+  });
   const entries = computed(() => Array.from(mapSignal().entries()));
   const keys = computed(() => Array.from(mapSignal().keys()));
   const values = computed(() => Array.from(mapSignal().values()));
+  const size = computed(() => mapSignal().size);
 
-  return {
+  return Object.assign(() => mapSignal(), {
     entries,
     keys,
     values,
-    get value(): Map<K, V> {
-      return mapSignal();
-    },
-    get size(): number {
-      return mapSignal().size;
-    },
+    size,
     get: (key: K): V | undefined => mapSignal().get(key),
     has: (key: K): boolean => mapSignal().has(key),
     set: (key: K, value: V): Map<K, V> => {
@@ -112,8 +118,8 @@ export function signalMap<K = string, V = unknown>(
       });
       return deleted;
     },
-    clear: (): void => {
-      mapSignal.set(new Map());
+    clear: (values?: Iterable<[K, V]> | Record<ToKey<K>, V>): void => {
+      mapSignal.set(new Map(values ? getIterable(values) : undefined));
     },
     toString: (): string => {
       return `SignalMap(${entries()
@@ -123,5 +129,8 @@ export function signalMap<K = string, V = unknown>(
     toJSON: (): Record<ToKey<K>, V> => {
       return Object.fromEntries(entries());
     },
-  };
+    toObject: (): Record<ToKey<K>, V> => {
+      return Object.fromEntries(entries());
+    },
+  });
 }

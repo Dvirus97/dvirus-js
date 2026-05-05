@@ -81,7 +81,13 @@ export function signalDebounce<T>(options: {
   };
 
   if (options.params) {
-    trackSource(options.params, scheduleDebounce, timeout, options.injector as Injector);
+    trackSource({
+      source: options.params,
+      scheduleDebounce,
+      timeout,
+      injector: options.injector as Injector,
+    });
+
   }
 
   return Object.assign(_sig, {
@@ -113,12 +119,12 @@ function clearPendingTimeout(
  * @param timeout - Shared timeout handle for cleanup on destroy.
  * @internal
  */
-function trackSource<T>(
-  source: () => T,
-  scheduleDebounce: (value: T) => void,
-  timeout: WritableSignal<ReturnType<typeof setTimeout> | null>,
-  injector?: Injector,
-): void {
+function trackSource<T>({source, scheduleDebounce, timeout, injector}: {
+  source: () => T;
+  scheduleDebounce: (value: T) => void;
+  timeout: WritableSignal<ReturnType<typeof setTimeout> | null>;
+  injector?: Injector;
+}): void {
   if (!isInInjectionContext() && !injector) {
     console.error(
       'Warning: signalDebounce is being used outside of an injection context. The debounced signal will not update based on the provided signal.\n\n',
@@ -130,10 +136,13 @@ function trackSource<T>(
   const _injector = injector ?? inject(Injector);
   const destroyRef = _injector.get(DestroyRef) ?? inject(DestroyRef);
 
-  effect(() => {
-    const val = source();
-    untracked(() => scheduleDebounce(val));
-  }, { injector: _injector });
+  effect(
+    () => {
+      const val = source();
+      untracked(() => scheduleDebounce(val));
+    },
+    { injector: _injector },
+  );
 
   destroyRef.onDestroy(() => clearPendingTimeout(timeout));
 }
