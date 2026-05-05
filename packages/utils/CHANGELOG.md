@@ -1,3 +1,13 @@
+## 1.1.2 (2026-05-05)
+
+### 🩹 Fixes
+
+- **angular:** align peer range and signal utils ([d2dc230](https://github.com/Dvirus97/dvirus-js/commit/d2dc230))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 1.1.1 (2026-04-11)
 
 This was a version bump only for utils to align it with other projects, there were no code changes.
