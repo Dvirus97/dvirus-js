@@ -18,7 +18,7 @@ import { Observable, startWith, Subscription } from 'rxjs';
 import { tryCatch } from './try-catch';
 import { writableSignal } from './writable-signal';
 
-interface ControlEvent<T> {
+interface ControlEvent<T> { 
   /**
    * Form control from which this event is originated.
    *
