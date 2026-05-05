@@ -1,3 +1,13 @@
+## 1.1.3 (2026-05-05)
+
+### 🩹 Fixes
+
+- Relax Angular peer dependency ranges ([e4c9423](https://github.com/Dvirus97/dvirus-js/commit/e4c9423))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 1.1.2 (2026-05-05)
 
 ### 🩹 Fixes
