@@ -1,3 +1,13 @@
+## 1.1.4 (2026-05-05)
+
+### 🩹 Fixes
+
+- update ([58f9aff](https://github.com/Dvirus97/dvirus-js/commit/58f9aff))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 1.1.3 (2026-05-05)
 
 ### 🩹 Fixes
