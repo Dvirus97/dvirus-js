@@ -17,7 +17,7 @@ import {
   SignalFormDisabledFn,
   SignalFormSetValueOptions,
 } from './types';
-import { writableSignal } from './writable-signal';
+import { writableSignal } from '../utils/';
 
 /**
  * Internal type for accessing sibling controls in a form.
