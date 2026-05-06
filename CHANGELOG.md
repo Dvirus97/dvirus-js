@@ -1,3 +1,14 @@
+## 1.1.7 (2026-05-06)
+
+### 🩹 Fixes
+
+- utils readme ([e41a14e](https://github.com/Dvirus97/dvirus-js/commit/e41a14e))
+- writableSignal options ([d274179](https://github.com/Dvirus97/dvirus-js/commit/d274179))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 1.1.6 (2026-05-06)
 
 ### 🩹 Fixes

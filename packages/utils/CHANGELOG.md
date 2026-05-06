@@ -1,3 +1,13 @@
+## 1.1.7 (2026-05-06)
+
+### 🩹 Fixes
+
+- utils readme ([e41a14e](https://github.com/Dvirus97/dvirus-js/commit/e41a14e))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 1.1.6 (2026-05-06)
 
 This was a version bump only for utils to align it with other projects, there were no code changes.
