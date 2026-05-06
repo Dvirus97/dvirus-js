@@ -1,3 +1,13 @@
+## 1.1.5 (2026-05-06)
+
+### 🩹 Fixes
+
+- writableSignal ([5bffecc](https://github.com/Dvirus97/dvirus-js/commit/5bffecc))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 1.1.4 (2026-05-05)
 
 ### 🩹 Fixes
