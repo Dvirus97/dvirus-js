@@ -8,28 +8,32 @@ import { computed, Signal, signal, untracked, WritableSignal } from "@angular/co
  * Angular-16 compatible alternative to `linkedSignal` (Angular 19+).
  */
 export function writableSignal<T>(fn: () => T): WritableSignal<T> {
-  // _source tracks the derived value reactively.
-  const _source = computed(fn);
+  // Create a fresh token whenever the source recomputes, even if the value is equal.
+  const sourceState = computed(() => ({ value: fn() }));
 
-  // _override stores the manually set value alongside the source snapshot it was set against.
-  // When the source changes, the snapshot no longer matches and the override is discarded.
-  const _override = signal<{ src: T; val: T } | undefined>(undefined);
+  // Manual overrides are only valid for the source-state token they were set against.
+  const override = signal<{ state: { value: T }; value: T } | undefined>(
+    undefined,
+  );
 
   const result = computed<T>(() => {
-    const src = _source();
-    const ov = _override();
-    if (ov !== undefined && Object.is(ov.src, src)) {
-      return ov.val;
+    const state = sourceState();
+    const currentOverride = override();
+    if (currentOverride !== undefined && currentOverride.state === state) {
+      return currentOverride.value;
     }
-    return src;
-  }); 
+    return state.value;
+  });
 
   return Object.assign(result, {
     set(v: T): void {
-      _override.set({ src: untracked(_source), val: v });
+      override.set({ state: untracked(sourceState), value: v });
     },
     update(updater: (value: T) => T): void {
-      _override.set({ src: untracked(_source), val: updater(untracked(result)) });
+      override.set({
+        state: untracked(sourceState),
+        value: updater(untracked(result)),
+      });
     },
     asReadonly(): Signal<T> {
       return result;
