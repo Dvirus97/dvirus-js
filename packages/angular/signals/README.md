@@ -1,197 +1,174 @@
-# Angular Signals Reactive Forms Library
+# Angular Signals Library
 
-This package provides a type-safe, reactive forms library for Angular, built on top of Angular Signals. It enables the creation of deeply nested, reactive form structures with strong typing, validation, and state management, inspired by Angular's classic Reactive Forms but fully signal-based.
+`@dvirus-js/angular-signals` provides two things:
 
-## Features
-- **Type-safe forms**: All form structures are strongly typed.
-- **Signal-based reactivity**: Built on Angular Signals for fine-grained reactivity.
-- **Validation and warnings**: Built-in support for validators and warnings.
-- **Nested groups and arrays**: Compose forms from deeply nested objects and arrays.
-- **Dynamic state**: Controls can be dynamically enabled/disabled, validated, and updated.
+- `signalForm`: typed Angular signal-based forms with controls, groups, arrays, validators, warnings, and disabled state.
+- signal utilities: helpers for Angular signals, reactive objects, debounced state, reactive `Map`/`Set`, and wrappers for Angular Reactive Forms.
 
-## Library Structure
+## Install
 
-- **signal-form/**: Core form logic, including controls, groups, arrays, types, and validators.
-  - `array.ts`: Implements signal-based form arrays.
-  - `control.ts`: Implements signal-based form controls (primitives).
-  - `errors.ts`: Utilities for validation error handling.
-  - `form.ts`: Implements signal-based form groups (objects).
-  - `types.ts`: Type definitions for all form structures and validators.
-  - `validators.ts`: Built-in validator functions (required, min, max, etc.).
-  - `index.ts`: Exports all main form APIs and includes usage examples.
-- **utils/**: Utility types and helpers for signals and objects.
-  - `object-type.ts`: Generic object type utility.
-  - `signal-notifier.ts`: Signal-based notification utility.
-  - `signals.utils.ts`: Helpers for working with signals and signal objects.
-  - `signal-debounce.ts`: Writable signal with built-in debounce support and loading state.
-  - `signal-set.ts`: Reactive `Set` wrapper backed by Angular signals.
-  - `signal-map.ts`: Reactive `Map` wrapper backed by Angular signals.
-  - `signal-object.ts`: Reactive object proxy where each property is a signal.
-  - `control-signal.ts`: Bridges Angular Reactive Forms controls to signals (value, status, events).
-  - `try-catch.ts`: Synchronous try/catch wrapper returning a `[result, error]` tuple.
-- **directives/**: Angular directives for signal-based UI behaviors.
-  - `click-outside.directive.ts`: Emits an event when a click occurs outside the host element or a group of elements.
+```bash
+npm install @dvirus-js/angular-signals
+```
 
-## Usage Example
+Peer dependencies: `@angular/core`, `@angular/forms`, and `rxjs`.
 
-```typescript
-import { signalForm, signalFormValidators } from '@your-scope/signals';
+## Main Exports
 
-const form = signalForm({
-  name: 'dvirus',
+- `signalForm`, `formGroup`, `formControl`, `formArray`: build typed signal-based forms.
+- `signalFormValidators`: built-in validators like `required`, `email`, `min`, `max`, `minLength`, `maxLength`, `pattern`.
+- `controlSignal`, `formGroupSignal`, `formArraySignal`: expose Angular Reactive Forms state as signals.
+- `signalDebounce`, `signalMap`, `signalSet`, `signalObject`, `signalNotifier`: general signal utilities.
+- `toSignalObj`, `fromSignalObj`, `signalOrValue`, `signalOrFunction`, `writableSignal`, `tryCatch`: low-level helpers.
+
+## Examples
+
+### Signal form
+
+Use `signalForm` to model nested objects and arrays with reactive value, error, warning, touched, dirty, and disabled state.
+
+```ts
+import { signalForm, signalFormValidators } from '@dvirus-js/angular-signals';
+
+const profileForm = signalForm({
+  name: {
+    value: '',
+    validators: [signalFormValidators.required, signalFormValidators.minLength(2)],
+  },
   age: {
-    value: 30,
-    validators: [signalFormValidators.required, signalFormValidators.min(0)],
+    value: 18,
+    validators: [signalFormValidators.min(0)],
     warnings: [signalFormValidators.max(120)],
   },
-  address: {
-    street: { value: '123 Main St', validators: [signalFormValidators.required] }
+  tags: ['angular', 'signals'],
+});
+
+profileForm.controls.name.setValue('Ada');
+profileForm.controls.tags.push('forms');
+
+profileForm.value();
+profileForm.valid();
+profileForm.controls.name.errors();
+profileForm.controls.age.firstErrorOrWarning();
+```
+
+### Dynamic disabled and cross-field logic
+
+Validators and `disabled` rules can read sibling controls through `getControl`.
+
+```ts
+import { signalForm, signalFormValidators } from '@dvirus-js/angular-signals';
+
+const accountForm = signalForm({
+  role: 'user',
+  adminCode: {
+    value: '',
+    validators: [
+      ({ item, getControl }) =>
+        getControl('role').value() === 'admin' && !item.value
+          ? { requiredForAdmin: 'Admin code is required' }
+          : null,
+    ],
+    disabled: ({ getControl }) => getControl('role').value() !== 'admin',
   },
-  hobbies: [
-    { value: 'coding', validators: [signalFormValidators.minLength(3)] },
-    'programming'
-  ]
 });
 
-// Access form state
-form.getControl('address').value(); // { street: '123 Main St' }
-form.controls.hobbies.controls()[0].errors(); // {}
-form.controls.age.firstErrorOrWarning(); // { name: 'max', message: 'To big', type: 'warning' }
+accountForm.controls.role.setValue('admin');
+accountForm.controls.adminCode.disabled(); // false
 ```
 
-## Utils Usage Examples
+### Angular Reactive Forms bridge
 
-### `object-type.ts`
+Use `controlSignal`, `formGroupSignal`, or `formArraySignal` when you already have `@angular/forms` controls and want signal accessors.
 
-```typescript
-import { ObjectType } from '@dvirus-js/angular/signals';
+```ts
+import { effect } from '@angular/core';
+import { FormControl, FormGroup } from '@angular/forms';
+import { controlSignal, formGroupSignal } from '@dvirus-js/angular-signals';
 
-const obj: ObjectType = { foo: 123, bar: 'abc' };
-// Use ObjectType for generic object utilities
-```
+const nameControl = new FormControl('Ada');
+const nameSig = controlSignal(nameControl);
 
-### `signal-notifier.ts`
-
-```typescript
-import { signalNotifier } from '@dvirus-js/angular/signals';
-
-const notifier = signalNotifier();
-effect(()=>{
-    notifier(); // listen to changes
+effect(() => {
+  console.log(nameSig.value(), nameSig.invalid(), nameSig.touched());
 });
-notifier.notify(); // increments count and notifies listeners
+
+const form = new FormGroup({
+  firstName: new FormControl('Ada'),
+  lastName: new FormControl('Lovelace'),
+});
+
+const formSig = formGroupSignal(form);
+console.log(formSig.controls.firstName.value());
 ```
 
-### `signals.utils.ts`
+### Signal utilities
 
-```typescript
-import { toSignalObj, fromSignalObj, signalOrValue, SignalOrValue } from '@dvirus-js/angular/signals';
+These helpers cover debounced state, reactive collections, reactive objects, and signal/value conversion.
 
-const plain = { a: 1, b: 'x' };
-const signals = toSignalObj(plain); // { a: WritableSignal<number>, b: WritableSignal<string> }
-const values = fromSignalObj(signals); // { a: 1, b: 'x' }
+```ts
+import {
+  effect,
+  signal,
+} from '@angular/core';
+import {
+  fromSignalObj,
+  signalDebounce,
+  signalMap,
+  signalNotifier,
+  signalObject,
+  signalOrValue,
+  signalSet,
+  toSignalObj,
+} from '@dvirus-js/angular-signals';
 
-// signalOrValue unwraps signals or value into value
-const maybeSignal1: SignalOrValue<number> = 5;
-const maybeSignal2: SignalOrValue<number> = signal(3);
-const value1 = signalOrValue(maybeSignal1); // 5
-const value2 = signalOrValue(maybeSignal2); // 3
-
-```
-
-### `signal-debounce.ts`
-
-```typescript
-import { signalDebounce } from '@dvirus-js/angular/signals';
-
-const search = signalDebounce<string>({ debounceTime: 300, initialValue: '' });
-search.setDebounced('hello'); // commits after 300 ms
-search.isLoading();           // true while pending
-```
-
-### `signal-set.ts`
-
-```typescript
-import { signalSet } from '@dvirus-js/angular/signals';
+const search = signalDebounce({ debounceTime: 300, initialValue: '' });
+search.setDebounced('angular');
+search.isLoading();
 
 const selected = signalSet<number>();
 selected.add(1);
 selected.toggle(2);
-console.log(selected.toArray()); // [1, 2]
-selected.toggle(1);
-console.log(selected.has(1));    // false
-// automatically works with JSON.stringify()
-console.log(cache.toJSON()); // [1, 2]
+selected.toArray();
 
+const cache = signalMap<string, number>({ a: 1 });
+cache.set('b', 2);
+cache.toJSON();
+
+const person = signalObject({ name: 'Ada', age: 36 });
+person.name = 'Grace';
+person();
+
+const notifier = signalNotifier();
+effect(() => {
+  notifier();
+});
+notifier.notify();
+
+const plain = { count: 1, label: 'ready' };
+const signalObj = toSignalObj(plain);
+const snapshot = fromSignalObj(signalObj);
+const count = signalOrValue(signal(5));
+console.log(snapshot, count);
 ```
 
-### `signal-map.ts`
+### Utility helpers
 
-```typescript
-import { signalMap } from '@dvirus-js/angular/signals';
+`tryCatch` wraps sync code into `[result, error]`, and `writableSignal` creates a computed-like signal that can still be overridden with `.set()` and `.update()`.
 
-const cache = signalMap<string, number>({ a: 1, b: 2 });
-cache.set('c', 3);
-console.log(cache.keys());   // ['a', 'b', 'c']
-cache.delete('a');            // true
-// automatically works with JSON.stringify()
-console.log(cache.toJSON()); // { b: 2, c: 3 }
+```ts
+import { computed, signal } from '@angular/core';
+import { tryCatch, writableSignal } from '@dvirus-js/angular-signals';
+
+const [data, error] = tryCatch(() => JSON.parse('{"ok":true}'));
+
+const source = signal(1);
+const derived = writableSignal(() => source() * 2);
+
+derived(); // 2
+derived.set(10);
+source.set(3);
+derived(); // 6
+
+console.log(data, error);
 ```
-
-### `signal-object.ts`
-
-```typescript
-import { signalObject } from '@dvirus-js/angular/signals';
-
-const person = signalObject({ name: 'dvirus', age: 30 });
-person.name;              // 'dvirus' (tracked by Angular reactivity)
-person['name'] = 'new';   // triggers reactive update
-const snapshot = person(); // { name: 'new', age: 30 } reactive
-```
-
-### `control-signal.ts`
-
-```typescript
-import { controlValueSignal } from '@dvirus-js/angular/signals';
-import { FormControl } from '@angular/forms';
-
-const ctrl = new FormControl('hello');
-const $ctrl$ = controlSignal(ctrl); // ControlSignal<string> that tracks ctrl changes
-
-effect(()=>{
-  $ctrl.value() // reactive
-  // $ctrl: value, valid, invalid, touched, dirty, errors, disabled
-})
-```
-
-### `try-catch.ts`
-
-```typescript
-import { tryCatch } from '@dvirus-js/angular/signals';
-
-const [result, error] = tryCatch(() => JSON.parse('{"a":1}'));
-if (error) { /* handle error */ }
-else { console.log(result); } // { a: 1 }
-```
-
-## Directives Usage Example
-
-### `click-outside.directive.ts`
-
-```html
-<!-- Listen for clicks outside this div (and any group elements) -->
-<div (clickOutside)="onClickOutside($event)">
-  ...
-</div>
-```
-
-```typescript
-// In your component:
-onClickOutside(event: MouseEvent): void {
-  // Handle the outside click (e.g., close a popup)
-}
-```
-
----
-
-This library was generated with [Nx](https://nx.dev).
