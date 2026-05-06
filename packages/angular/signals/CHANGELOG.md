@@ -1,3 +1,13 @@
+## 1.1.6 (2026-05-06)
+
+### 🩹 Fixes
+
+- writable signal 2 ([78e07fc](https://github.com/Dvirus97/dvirus-js/commit/78e07fc))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 1.1.5 (2026-05-06)
 
 ### 🩹 Fixes
