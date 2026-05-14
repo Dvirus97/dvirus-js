@@ -1,3 +1,13 @@
+## 1.1.8 (2026-05-14)
+
+### 🩹 Fixes
+
+- swap parseRichText to return BlockGroup by default ([ef7c103](https://github.com/Dvirus97/dvirus-js/commit/ef7c103))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 1.1.7 (2026-05-06)
 
 ### 🩹 Fixes
