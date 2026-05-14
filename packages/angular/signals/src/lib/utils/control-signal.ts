@@ -18,7 +18,7 @@ import { Observable, startWith, Subscription } from 'rxjs';
 import { tryCatch } from './try-catch';
 import { writableSignal } from './writable-signal';
 
-interface ControlEvent<T> { 
+interface ControlEvent<T> {
   /**
    * Form control from which this event is originated.
    *
@@ -135,9 +135,9 @@ export function controlSignal<
 
     // control.events.subscribe((x) => untracked(() => $events.set(x))),
   );
-  
+
   // Subscribe to control.events if available (Angular v18+)
-  const ctrl = control as unknown as {events: Observable< ControlEvent<T>>};
+  const ctrl = control as unknown as { events: Observable<ControlEvent<T>> };
   if (ctrl.events && typeof ctrl.events.subscribe === 'function') {
     subscriptions.push(
       ctrl.events.subscribe((x: ControlEvent<T>) =>
@@ -289,7 +289,7 @@ type ControlsValue<TControls extends TypedControlMap> = {
 
 export type NestedControlSignal<TControl extends AbstractControl<unknown>> =
   TControl extends FormGroup<infer TControls>
-    ? FormGroupSignal<TControls & TypedControlMap>
+    ? FormGroupSignal<TControls> //& TypedControlMap
     : TControl extends FormArray<infer TItemControl>
       ? FormArraySignal<TItemControl & AbstractControl<unknown>>
       : ControlSignal<ControlValue<TControl>, TControl>;
