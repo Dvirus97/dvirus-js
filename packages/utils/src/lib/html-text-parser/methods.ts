@@ -71,6 +71,7 @@ export function getStylesheet(): string {
   }
   return lines.join('\n');
 }
+
 export function generateStylesheet(): void {
   if ('document' in globalThis) {
     const stylesheet = getStylesheet();
@@ -146,4 +147,84 @@ export function groupByBlocks(segments: TextSegment[]): BlockGroup[] {
   }
 
   return groups;
+}
+
+/**
+ * Appends parsed rich text segments to a DOM element, creating nested elements
+ * for each block group and its inline segments.
+ *
+ * @param htmlElement - The target DOM element to append content to. Must support `appendChild`.
+ * @param segments - An array of `BlockGroup` objects (e.g. from `groupByBlocks`).
+ * @param config - Optional configuration for styling behavior.
+ * @param config.useClasses - Whether to apply CSS class names to elements. Defaults to `true`.
+ * @param config.useStyles - Whether to apply inline styles to elements. Defaults to `false`.
+ *
+ * @example
+ * const el = document.getElementById('output');
+ * const groups = groupByBlocks(parseRichText('<b>Hello</b> <i>world</i>'));
+ * appendToDom(el, groups);
+ *
+ * @example
+ * // With inline styles instead of classes
+ * appendToDom(el, groups, { useClasses: false, useStyles: true });
+ */
+export function appendToDom<T extends object>(
+  htmlElement: T,
+  segments: BlockGroup[],
+  config?: {
+    useClasses?: boolean;
+    useStyles?: boolean;
+  },
+): void {
+  if (!('document' in globalThis)) {
+    console.warn(
+      '[html-text-parser] Cannot append segments: document is not available.',
+    );
+    return;
+  }
+  if (!htmlElement || !('appendChild' in htmlElement)) {
+    console.warn(
+      '[html-text-parser] Cannot append segments: provided element does not support appendChild.',
+    );
+    return;
+  }
+
+  config = { useClasses: true, useStyles: false, ...config };
+
+  const container = htmlElement as { appendChild: (child: unknown) => void };
+  const document = (globalThis as unknown as { document: unknown })
+    .document as {
+    createElement: (tagName: string) => {
+      appendChild: (child: unknown) => void;
+      setAttribute: (attr: string, value: string) => void;
+      className: string;
+      textContent: string;
+    };
+  };
+
+  for (const group of segments) {
+    const wrapper = document.createElement(
+      group.containerTagNames[0] || 'span',
+    );
+    if (config.useClasses) {
+      wrapper.className = group.cssClass;
+    }
+    if (config.useStyles) {
+      wrapper.setAttribute('style', group.style);
+    }
+
+    for (const segment of group.segments) {
+      const span = document.createElement('span');
+      span.textContent = segment.text;
+      if (config.useClasses) {
+        span.className = segment.cssClass;
+      }
+      if (config.useStyles) {
+        span.setAttribute('style', segment.style);
+      }
+      wrapper.appendChild(span);
+    }
+
+    container.appendChild(wrapper);
+  }
 }

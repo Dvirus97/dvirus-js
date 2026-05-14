@@ -5,6 +5,7 @@ import {
   setCssClassPrefix,
 } from './constant';
 import {
+  appendToDom,
   createTagSegment,
   generateStylesheet,
   getStylesheet,
@@ -12,11 +13,14 @@ import {
   groupByBlocks,
   setStyleMap,
 } from './methods';
-import { TextSegment } from './types';
+import { TextSegment, BlockGroup } from './types';
 
 /**
- * Parses a string containing supported inline tags into typed segments.
+ * Parses a string containing supported inline tags into block groups.
  * Supports nested tags. All other content is treated as plain text.
+ * Returns segments grouped by their block/container context.
+ *
+ * For a flat array of segments without block grouping, use `parseRichText.flat()`.
  *
  * Supported tags (add more in `RICH_TEXT_TAGS`):
  * `<b>` / `<strong>`, `<i>` / `<em>`, `<u>`, `<s>`, `<mark>`, `<small>`,
@@ -28,12 +32,30 @@ import { TextSegment } from './types';
  * @example
  * parseRichText('Hello <b>world</b>!')
  * // [
- * //   { text: 'Hello ', styles: [], cssClass: '' },
- * //   { text: 'world', styles: ['bold'] },
- * //   { text: '!', styles: [] },
+ * //   { containerTagNames: [], cssClass: '', style: '', styleObject: {}, segments: [
+ * //     { text: 'Hello ', ... },
+ * //     { text: 'world', ... },
+ * //     { text: '!', ... },
+ * //   ]},
  * // ]
  */
-export function parseRichText(input: string): TextSegment[] {
+export function parseRichText(input: string): BlockGroup[] {
+  return groupByBlocks(parseRichTextFlat(input));
+}
+
+/**
+ * Parses a string containing supported inline tags into a flat array of typed segments.
+ * Supports nested tags. All other content is treated as plain text.
+ *
+ * @example
+ * parseRichTextFlat('Hello <b>world</b>!')
+ * // [
+ * //   { text: 'Hello ', tagNames: '', cssClass: '' },
+ * //   { text: 'world', tagNames: 'b', cssClass: 'rtp-b' },
+ * //   { text: '!', tagNames: '', cssClass: '' },
+ * // ]
+ */
+export function parseRichTextFlat(input: string): TextSegment[] {
   const segments: TextSegment[] = [];
   const activeStyles = new Map<string, number>(); // style → nesting depth
   let lastIndex = 0;
@@ -153,8 +175,9 @@ parseRichText.setSelfClosingTag = setSelfClosingTag;
 parseRichText.setBlockTag = (tag: string) => BLOCK_TAGS.add(tag);
 parseRichText.removeBlockTag = (tag: string) => BLOCK_TAGS.delete(tag);
 parseRichText.setCssClassPrefix = setCssClassPrefix;
+parseRichText.getStylesheet = getStylesheet;
+parseRichText.flat = parseRichTextFlat;
 if ('document' in globalThis) {
   parseRichText.generateStylesheet = generateStylesheet;
+  parseRichText.appendToDom = appendToDom;
 }
-parseRichText.getStylesheet = getStylesheet;
-parseRichText.groupByBlocks = groupByBlocks;

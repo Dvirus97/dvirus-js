@@ -20,6 +20,7 @@ export const RICH_TEXT_TAGS = new Map<string, string>([
   ['h5', 'h5'],
   ['h6', 'h6'],
   ['code', 'code'],
+  ['span', 'span'],
   ['p', 'p'],
   ['div', 'div'],
   ['ul', 'ul'],

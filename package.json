@@ -7,7 +7,6 @@
     "-- create-ts-lib2": "npx nx g @nx/angular:library <package name with path> --publishable --importPath=@dvirus-js/angular/<package name>",
     "-- create-ts-lib": "npx nx g @nx/js:library <package name with path> --publishable --importPath=@dvirus-js/<package name>"
   },
-  "private": true,
   "publishConfig": {
     "access": "public"
   },
