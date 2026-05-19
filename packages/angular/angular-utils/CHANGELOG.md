@@ -1,3 +1,13 @@
+## 0.0.3 (2026-05-19)
+
+### 🩹 Fixes
+
+- ensure consistent trailing newlines in package exports ([866782e](https://github.com/Dvirus97/dvirus-js/commit/866782e))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.2 (2026-05-19)
 
 This was a version bump only for angular-utils to align it with other projects, there were no code changes.
