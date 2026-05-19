@@ -177,7 +177,5 @@ parseRichText.removeBlockTag = (tag: string) => BLOCK_TAGS.delete(tag);
 parseRichText.setCssClassPrefix = setCssClassPrefix;
 parseRichText.getStylesheet = getStylesheet;
 parseRichText.flat = parseRichTextFlat;
-if ('document' in globalThis) {
-  parseRichText.generateStylesheet = generateStylesheet;
-  parseRichText.appendToDom = appendToDom;
-}
+parseRichText.generateStylesheet = generateStylesheet;
+parseRichText.appendToDom = appendToDom;
