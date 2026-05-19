@@ -1,3 +1,13 @@
+## 0.0.4 (2026-05-19)
+
+### 🩹 Fixes
+
+- minor formatting updates ([3dbc3e6](https://github.com/Dvirus97/dvirus-js/commit/3dbc3e6))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.3 (2026-05-19)
 
 ### 🩹 Fixes
