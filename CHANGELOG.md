@@ -1,3 +1,13 @@
+## 0.0.2 (2026-05-19)
+
+### 🩹 Fixes
+
+- check all package ([3e145c9](https://github.com/Dvirus97/dvirus-js/commit/3e145c9))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 1.1.8 (2026-05-14)
 
 ### 🩹 Fixes
