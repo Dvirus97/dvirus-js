@@ -13,6 +13,7 @@ import {
   FormControlStatus,
   ValidationErrors,
   FormArray,
+  FormControlState,
 } from '@angular/forms';
 import { Observable, startWith, Subscription } from 'rxjs';
 import { tryCatch } from './try-catch';
@@ -44,7 +45,7 @@ export interface ControlSignal<
   /** Signal returning the underlying `AbstractControl` instance with its specific type. */
   control: TControl;
   /** Signal returning the current value of the control. */
-  value: Signal<T | null | undefined>;
+  value: Signal<UnwrapFromControlState<T> | null | undefined>;
   /** Signal returning the current validation status (`VALID`, `INVALID`, `PENDING`, `DISABLED`). */
   status: Signal<FormControlStatus | null | undefined>;
   /** Signal returning the most recent `ControlEvent` emitted by the control. */
@@ -159,7 +160,7 @@ export function controlSignal<
     value: computed(() => {
       $value();
       $events();
-      return control.value as T;
+      return control.value as UnwrapFromControlState<T>;
     }),
     status: $status.asReadonly(),
     events: $events.asReadonly(),
@@ -278,6 +279,9 @@ export function formArraySignal<TControl extends AbstractControl<unknown>>(
 
 // ############ HELPERS ############
 
+type UnwrapFromControlState<T> =
+  T extends FormControlState<unknown> ? T['value'] : T;
+
 type TypedControlMap = Record<string, AbstractControl<unknown>>;
 
 type ControlValue<TControl extends AbstractControl<unknown>> =
@@ -289,7 +293,7 @@ type ControlsValue<TControls extends TypedControlMap> = {
 
 export type NestedControlSignal<TControl extends AbstractControl<unknown>> =
   TControl extends FormGroup<infer TControls>
-    ? FormGroupSignal<TControls> //& TypedControlMap
+    ? FormGroupSignal<TControls & TypedControlMap> //& TypedControlMap
     : TControl extends FormArray<infer TItemControl>
       ? FormArraySignal<TItemControl & AbstractControl<unknown>>
       : ControlSignal<ControlValue<TControl>, TControl>;

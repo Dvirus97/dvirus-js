@@ -55,7 +55,14 @@ class _SignalObject<T extends Record<string, unknown>> {
           return value;
         }
         // Read the signal — this is tracked by Angular's reactive context
-        return self.#signals.get(prop)?.();
+        const s = self.#signals.get(prop)?.();
+        /** create new signal if it doesn't exist */
+        if (s === undefined && !self.#signals.has(prop)) {
+          const newSignal = signal(undefined);
+          self.#signals.set(prop, newSignal);
+          return newSignal();
+        }
+        return s;
       },
 
       set(_, prop, value): boolean {
@@ -68,8 +75,23 @@ class _SignalObject<T extends Record<string, unknown>> {
         } else {
           // Dynamic property — create a new signal and bump version
           self.#signals.set(prop, signal(value));
-          self.#version.update((v) => v + 1);
+          self.#version.update(addVersion);
         }
+        return true;
+      },
+
+      deleteProperty(_, prop): boolean {
+        // Prevent accidental deletion of internal methods or symbols
+        if (typeof prop === 'symbol' || prop in self) {
+          return false;
+        }
+        // If it's a tracked signal property, remove it and bump the version
+        if (self.#signals.has(prop)) {
+          self.#signals.delete(prop);
+          self.#version.update(addVersion);
+          return true;
+        }
+        // Standard JS behavior: deleting a non-existent property returns true
         return true;
       },
 
@@ -127,7 +149,9 @@ class _SignalObject<T extends Record<string, unknown>> {
   $assign(...sources: object[]): void {
     for (const source of sources) {
       const entries = isSignalObject(source)
-        ? Object.entries((source as unknown as { $snapshot: Signal<object> }).$snapshot())
+        ? Object.entries(
+            (source as unknown as { $snapshot: Signal<object> }).$snapshot(),
+          )
         : Object.entries(source);
 
       for (const [key, value] of entries) {
@@ -139,10 +163,11 @@ class _SignalObject<T extends Record<string, unknown>> {
         }
       }
     }
-    this.#version.update((v) => v + 1);
+    this.#version.update(addVersion);
   }
 
   toJSON(): T {
+    this.#version(); // track structural changes (new/removed props)
     const result: Record<string, unknown> = {};
     for (const [key, sig] of this.#signals) {
       result[key] = sig();
@@ -244,8 +269,12 @@ export type SignalObject<T> = T & {
  * // Track all properties reactively:
  * effect(() => console.log(person.$snapshot()));
  */
-export function signalObject<T extends object>(initialValue: T): SignalObject<T> {
-  return new _SignalObject(initialValue as Record<string, unknown>) as unknown as SignalObject<T>;
+export function signalObject<T extends object>(
+  initialValue: T,
+): SignalObject<T> {
+  return new _SignalObject(
+    initialValue as Record<string, unknown>,
+  ) as unknown as SignalObject<T>;
 }
 
 /**
@@ -308,10 +337,15 @@ export function mergeSignalObjects<T extends object[]>(
  * @example
  * // UnionToIntersection<{ a: 1 } | { b: 2 }> → { a: 1 } & { b: 2 }
  */
-type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (
-  k: infer I,
-) => void
+type UnionToIntersection<U> = (
+  U extends unknown ? (k: U) => void : never
+) extends (k: infer I) => void
   ? I
   : never;
 
 type _Function = (...args: unknown[]) => unknown;
+
+function addVersion(prev: number): number {
+  if (prev > 1000) return 1;
+  return prev + 1;
+}
