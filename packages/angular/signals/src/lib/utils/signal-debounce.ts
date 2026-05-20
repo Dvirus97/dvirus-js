@@ -38,13 +38,13 @@ export interface SignalDebounce<T> extends WritableSignal<T> {
  *
  * @typeParam T - The type of the signal's value.
  * @param options - Configuration object.
- * @param options.params - Optional reactive source function whose return value
+ * @param options.source - Optional reactive source function whose return value
  *   is tracked and debounced into the signal.
  * @param options.debounceTime - Delay in milliseconds before a debounced value
  *   is committed.
  * @param options.initialValue - Optional initial value for the signal.
  * @param options.injector - Optional Angular `Injector` to use for setting up
- *   reactive tracking. Required if `params` is provided and this function is called
+ *   reactive tracking. Required if `source` is provided and this function is called
  *   outside of an injection context.
  * @returns A `SignalDebounce<T>` instance.
  *
@@ -56,11 +56,11 @@ export interface SignalDebounce<T> extends WritableSignal<T> {
  *
  * // Tracking a reactive source
  * const query = signal('angular');
- * const debounced = signalDebounce({ params: () => query(), debounceTime: 500 });
+ * const debounced = signalDebounce({ source: () => query(), debounceTime: 500 });
  * ```
  */
 export function signalDebounce<T>(options: {
-  params?: () => T;
+  source?: () => T;
   debounceTime: number;
   initialValue?: T;
   injector?: unknown;
@@ -80,14 +80,13 @@ export function signalDebounce<T>(options: {
     );
   };
 
-  if (options.params) {
+  if (options.source) {
     trackSource({
-      source: options.params,
+      source: options.source,
       scheduleDebounce,
       timeout,
       injector: options.injector as Injector,
     });
-
   }
 
   return Object.assign(_sig, {
@@ -119,7 +118,12 @@ function clearPendingTimeout(
  * @param timeout - Shared timeout handle for cleanup on destroy.
  * @internal
  */
-function trackSource<T>({source, scheduleDebounce, timeout, injector}: {
+function trackSource<T>({
+  source,
+  scheduleDebounce,
+  timeout,
+  injector,
+}: {
   source: () => T;
   scheduleDebounce: (value: T) => void;
   timeout: WritableSignal<ReturnType<typeof setTimeout> | null>;
