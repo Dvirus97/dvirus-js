@@ -1,3 +1,13 @@
+## 0.0.5 (2026-05-20)
+
+### 🩹 Fixes
+
+- update signal-debounce and writable-signal utilities ([0ebced8](https://github.com/Dvirus97/dvirus-js/commit/0ebced8))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.4 (2026-05-19)
 
 ### 🩹 Fixes
