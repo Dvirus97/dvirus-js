@@ -1,3 +1,13 @@
+## 0.0.6 (2026-05-20)
+
+### 🩹 Fixes
+
+- update utils index exports ([7919620](https://github.com/Dvirus97/dvirus-js/commit/7919620))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.5 (2026-05-20)
 
 This was a version bump only for utils to align it with other projects, there were no code changes.
