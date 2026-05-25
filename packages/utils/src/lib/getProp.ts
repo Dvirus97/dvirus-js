@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * A utility type to get the value type at a given path in an object.
  *
@@ -56,6 +57,60 @@ export function getProp<T, P extends string>(obj: T, path: P): PathValue<T, P> {
   }
 
   return recursiveSearch(keys, obj);
+}
+
+/**
+ * Utility to deeply set a value in an object at a given path array.
+ * This is a helper function to reconstruct the object structure.
+ */
+export function setDeepValue<TObj extends object, TValue = any>(
+  obj: TObj,
+  keysPath: string[],
+  value: TValue,
+): void {
+  let current = obj as any;
+
+  for (let i = 0; i < keysPath.length; i++) {
+    const key = keysPath[i] ?? '';
+
+    if (i === keysPath.length - 1) {
+      current[key] = value;
+    } else {
+      // Create the nested object if it doesn't exist yet
+      if (!current[key] || typeof current[key] !== 'object') {
+        current[key] = {};
+      }
+      current = current[key];
+    }
+  }
+}
+
+/**
+ * Takes an object and an array of paths, returning a new object
+ * that preserves the original nested structure for the requested keys.
+ */
+export function pickPaths<T, P extends string>(
+  obj: T,
+  paths: readonly P[],
+): Partial<T> {
+  const result = {} as any;
+
+  if (!obj || typeof obj !== 'object') {
+    return result;
+  }
+
+  for (const path of paths) {
+    // 1. Get the value using your existing getProp function
+    const value = getProp(obj, path);
+
+    // 2. If the value exists (or you want to include undefined), recreate the structure
+    if (value !== undefined) {
+      const keysPath = path.split('.');
+      setDeepValue(result, keysPath, value);
+    }
+  }
+
+  return result as Partial<T>;
 }
 
 // Example usage:

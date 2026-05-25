@@ -40,10 +40,10 @@ export type TryResult<T, E = Error> = [T, null] | [null, E];
  * @returns {Promise<TryResult<T, E>>} - A promise that resolves to a tuple with either the result or the error
  */
 export async function tryCatchAsync<T, E = Error>(
-  promise: Promise<T>,
+  promise: Promise<T> | (() => Promise<T>),
 ): Promise<TryResult<T, E>> {
   try {
-    const val = await promise;
+    const val = await (typeof promise === 'function' ? promise() : promise);
     return [val, null];
   } catch (error) {
     return [null, error as E];

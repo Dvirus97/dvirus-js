@@ -42,9 +42,7 @@ export class Result<T, E extends Error = Error> {
     // } catch (error) {
     //     return Result.err(error);
     // }
-    return promise
-      .then((v) => Result.ok(v ?? ('__void__' as T)))
-      .catch((e) => Result.err(e));
+    return promise.then((v) => Result.ok(v)).catch((e) => Result.err(e));
   }
 
   /**
@@ -71,12 +69,12 @@ export class Result<T, E extends Error = Error> {
    * @throws {Error} If both ok and err are provided or neither is provided.
    */
   constructor(ok: T | null, err: E | null) {
-    if (!ok && !err) {
+    if (ok == null && err == null) {
       throw new Error(
         'Result must be initialized with either an ok or an err value',
       );
     }
-    if (ok && err) {
+    if (ok != null && err != null) {
       throw new Error(
         "Result can't be initialized with both an ok and an err value",
       );
