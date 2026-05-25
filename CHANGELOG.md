@@ -1,3 +1,13 @@
+## 0.0.7 (2026-05-25)
+
+### 🩹 Fixes
+
+- update utils internals and http error handling ([c1e9420](https://github.com/Dvirus97/dvirus-js/commit/c1e9420))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.6 (2026-05-20)
 
 ### 🩹 Fixes
