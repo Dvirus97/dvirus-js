@@ -1,22 +1,103 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export type HttpError = Error & {
-  status?: number;
-  statusText?: string;
-  body?: string;
-  code?: string;
-  isNetworkError?: boolean;
-  cause?: unknown;
-};
+import { tryCatch } from './tryCatch';
+
+export interface HttpError<TData> extends Error, _Response<TData> {}
 
 export interface RequestInit extends globalThis.RequestInit {
   parse?: 'JSON' | 'TEXT' | 'BLOB' | 'ARRAYBUFFER';
 }
 
+interface _Response<T>
+  extends Omit<
+    globalThis.Response,
+    'body' | 'json' | 'text' | 'blob' | 'arrayBuffer'
+  > {
+  data: T;
+}
+
+export type Response<T> = _Response<T>;
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export declare namespace Http {
+  export type Response<T> = _Response<T>;
+}
+
+let baseUrl = '';
+
+export const HttpCodeNames = {
+  100: 'Continue',
+  101: 'Switching Protocols',
+  102: 'Processing',
+  103: 'Early Hints',
+  200: 'OK',
+  201: 'Created',
+  202: 'Accepted',
+  203: 'Non-Authoritative Information',
+  204: 'No Content',
+  205: 'Reset Content',
+  206: 'Partial Content',
+  207: 'Multi-Status',
+  208: 'Already Reported',
+  226: 'IM Used',
+  300: 'Multiple Choices',
+  301: 'Moved Permanently',
+  302: 'Found',
+  303: 'See Other',
+  304: 'Not Modified',
+  305: 'Use Proxy',
+  307: 'Temporary Redirect',
+  308: 'Permanent Redirect',
+  400: 'Bad Request',
+  401: 'Unauthorized',
+  402: 'Payment Required',
+  403: 'Forbidden',
+  404: 'Not Found',
+  405: 'Method Not Allowed',
+  406: 'Not Acceptable',
+  407: 'Proxy Authentication Required',
+  408: 'Request Timeout',
+  409: 'Conflict',
+  410: 'Gone',
+  411: 'Length Required',
+  412: 'Precondition Failed',
+  413: 'Payload Too Large',
+  414: 'URI Too Long',
+  415: 'Unsupported Media Type',
+  416: 'Range Not Satisfiable',
+  417: 'Expectation Failed',
+  418: "I'm a teapot",
+  421: 'Misdirected Request',
+  422: 'Unprocessable Entity',
+  423: 'Locked',
+  424: 'Failed Dependency',
+  425: 'Too Early',
+  426: 'Upgrade Required',
+  428: 'Precondition Required',
+  429: 'Too Many Requests',
+  431: 'Request Header Fields Too Large',
+  451: 'Unavailable For Legal Reasons',
+  500: 'Internal Server Error',
+  501: 'Not Implemented',
+  502: 'Bad Gateway',
+  503: 'Service Unavailable',
+  504: 'Gateway Timeout',
+  505: 'HTTP Version Not Supported',
+  506: 'Variant Also Negotiates',
+  507: 'Insufficient Storage',
+  508: 'Loop Detected',
+  510: 'Not Extended',
+  511: 'Network Authentication Required',
+};
+
 /**
  * A utility object for making HTTP requests.
  */
-export const http = {
+export const Http = {
+  setBaseUrl: (url: string) => {
+    baseUrl = url;
+  },
+  CodeNames: HttpCodeNames,
   /**
    * Makes a GET request to the specified URL.
    *
@@ -28,8 +109,11 @@ export const http = {
   get: async function <R = any>(
     url: string,
     options?: RequestInit,
-  ): Promise<R> {
-    return await handleResponse<R>(() => fetch(url, options), options);
+  ): Promise<Response<R>> {
+    return await handleResponse<R>(
+      () => fetch(baseUrl + url, options),
+      options,
+    );
   },
 
   /**
@@ -46,10 +130,10 @@ export const http = {
     url: string,
     data: unknown,
     options?: RequestInit,
-  ): Promise<R> {
+  ): Promise<Response<R>> {
     return await handleResponse<R>(
       () =>
-        fetch(url, {
+        fetch(baseUrl + url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -63,29 +147,26 @@ export const http = {
   },
 
   /**
-   * Makes a DELETE request to the specified URL with the given ID.
+   * Makes a DELETE request to the specified URL.
    *
    * @template R
    * @param {string} url - The URL to send the DELETE request to.
-   * @param {string} id - The ID to send in the request body.
    * @param {RequestInit} [options] - Optional request options.
    * @returns {Promise<R>} The response data.
    * @throws {Error} If the response is not ok.
    */
   delete: async function <R = any>(
     url: string,
-    id: string,
     options?: RequestInit,
-  ): Promise<R> {
+  ): Promise<Response<R>> {
     return await handleResponse<R>(
       () =>
-        fetch(url, {
+        fetch(baseUrl + url, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
             ...options?.headers,
           },
-          body: JSON.stringify({ id }),
           ...options,
         }),
       options,
@@ -106,10 +187,10 @@ export const http = {
     url: string,
     data: unknown,
     options?: RequestInit,
-  ): Promise<R> {
+  ): Promise<Response<R>> {
     return await handleResponse<R>(
       () =>
-        fetch(url, {
+        fetch(baseUrl + url, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -136,10 +217,10 @@ export const http = {
     url: string,
     data: unknown,
     options?: RequestInit,
-  ): Promise<R> {
+  ): Promise<Response<R>> {
     return await handleResponse<R>(
       () =>
-        fetch(url, {
+        fetch(baseUrl + url, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -162,97 +243,73 @@ export const http = {
  * @throws {Error} If the response is not ok.
  */
 async function handleResponse<R>(
-  res: () => Promise<Response>,
+  res: () => Promise<globalThis.Response>,
   options?: RequestInit,
-): Promise<R> {
+): Promise<Response<R>> {
   try {
     const response = await res();
     if (!response.ok) {
-      const bodyText = await response.text().catch(() => '');
-      const httpError = Object.assign(
-        new Error(`HTTP ${response.status} ${response.statusText}`),
-        {
-          status: response.status,
-          statusText: response.statusText,
-          body: bodyText,
-        },
-      );
-      throw httpError as HttpError;
+      const text = await response.text();
+      const [data, dataError] = tryCatch(() => JSON.parse(text));
+
+      const resError: HttpError<R> = Object.assign(response, {
+        data: dataError ? text : data,
+        name: `HTTP_${response.status}`,
+        message:
+          response.statusText ||
+          HttpCodeNames[response.status as keyof typeof HttpCodeNames] ||
+          `HTTP_${response.status}`,
+      });
+
+      throw resError;
     }
+
     if (options?.parse === 'JSON') {
-      return (await response.json()) as R;
+      return Object.assign(response, {
+        data: (await response.json()) as R,
+      });
     } else if (options?.parse === 'TEXT') {
-      return (await response.text()) as unknown as R;
+      return Object.assign(response, {
+        data: (await response.text()) as R,
+      });
     } else if (options?.parse === 'BLOB') {
-      return (await response.blob()) as unknown as R;
+      return Object.assign(response, {
+        data: (await response.blob()) as R,
+      });
     } else if (options?.parse === 'ARRAYBUFFER') {
-      return (await response.arrayBuffer()) as unknown as R;
+      return Object.assign(response, {
+        data: (await response.arrayBuffer()) as R,
+      });
     }
-    return (await response.json()) as R;
+
+    return Object.assign(response, {
+      data: (await response.json()) as R,
+    });
   } catch (error) {
-    if (isHttpError(error)) {
-      throw error;
-    }
+    if (isResponse(error)) throw error as HttpError<R>;
 
-    const networkError = Object.assign(
-      new Error(
-        error instanceof Error ? error.message : 'Network request failed',
-      ),
-      {
-        status: getErrorStatus(error),
-        statusText: 'NETWORK_ERROR',
-        code: getErrorCode(error),
-        isNetworkError: true,
-        cause: error,
-      },
-    );
-    throw networkError as HttpError;
+    const resError: HttpError<R> = {
+      data: error as R,
+      ok: false,
+      status: 0,
+      statusText: 'NETWORK_ERROR',
+      type: 'error',
+      name: 'NetworkError',
+      message: error instanceof Error ? error.message : String(error),
+      headers: new Headers(),
+      url: '',
+      redirected: false,
+      clone: () => resError as unknown as globalThis.Response,
+      bodyUsed: false,
+      formData: () => Promise.resolve(new FormData()),
+    };
+    throw resError;
   }
 }
 
-function getErrorStatus(error: unknown): number | undefined {
-  if (
-    typeof error === 'object' &&
-    error !== null &&
-    'status' in error &&
-    typeof error.status === 'number'
-  ) {
-    return error.status;
-  }
-  return undefined;
-}
-
-function getErrorCode(error: unknown): string | undefined {
-  if (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    typeof error.code === 'string'
-  ) {
-    return error.code;
-  }
-
-  if (
-    typeof error === 'object' &&
-    error !== null &&
-    'cause' in error &&
-    typeof error.cause === 'object' &&
-    error.cause !== null &&
-    'code' in error.cause &&
-    typeof error.cause.code === 'string'
-  ) {
-    return error.cause.code;
-  }
-
-  return undefined;
-}
-
-function isHttpError(error: unknown): error is HttpError {
+function isResponse(val: unknown): val is Response<unknown> {
   return (
-    typeof error === 'object' &&
-    error !== null &&
-    'status' in error &&
-    typeof error.status === 'number'
+    val !== null && typeof val === 'object' && 'data' in val && 'body' in val
   );
 }
 
