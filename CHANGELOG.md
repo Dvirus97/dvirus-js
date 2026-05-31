@@ -1,3 +1,13 @@
+## 0.0.13 (2026-05-31)
+
+### 🩹 Fixes
+
+- **ci:** use NPM_CONFIG_TOKEN for bun publish ([b964c6f](https://github.com/Dvirus97/dvirus-js/commit/b964c6f))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.12 (2026-05-31)
 
 ### 🩹 Fixes
