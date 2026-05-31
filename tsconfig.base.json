@@ -27,6 +27,9 @@
       "@dvirus-js/react": [
         "packages/react/utils/src/index.ts"
       ],
+      "@dvirus-js/web": [
+        "packages/web/src/index.ts"
+      ],
       "@dvirus-js/utils": [
         "packages/utils/src/index.ts"
       ]
