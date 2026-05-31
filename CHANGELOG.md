@@ -1,3 +1,13 @@
+## 0.0.12 (2026-05-31)
+
+### 🩹 Fixes
+
+- **ci:** write bun npm auth to userconfig npmrc ([c28043a](https://github.com/Dvirus97/dvirus-js/commit/c28043a))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.11 (2026-05-31)
 
 ### 🩹 Fixes
