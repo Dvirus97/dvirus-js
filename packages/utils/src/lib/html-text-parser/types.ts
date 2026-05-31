@@ -1,36 +1,55 @@
 /**
- * Represents a parsed segment of rich text with active style classes.
+ * A parsed run of text with its active tag context.
  */
 export interface TextSegment {
-  /** The text content of the segment (e.g. 'Hello world') */
+  /** Plain text content of this run */
   text: string;
-  /** Comma-separated list of active tag names (e.g. 'b,i') */
+  /** All active tag names as a comma-separated string (e.g. 'b,i') */
   tagNames: string;
-  /** Array of active tag names (e.g. ['b', 'i']) */
+  /** All active tag names as an array (e.g. ['b', 'i']) */
   tagNamesList: string[];
-  /** CSS style string — only inline tag styles, excludes block/container styles */
-  style: string;
-  /** Style object — only inline tag styles, excludes block/container styles */
-  styleObject?: Record<string, string>;
-  /** Array of active block/container tag names (e.g. ['div', 'p']) */
+  /** Active block/container tag names for this run (e.g. ['div', 'p']) */
   containerTagNames: string[];
-  /** CSS class string for inline tags only (e.g. 'rtp-b rtp-i') */
+  /** CSS class string for inline tags (e.g. 'rtp-b rtp-i') */
   cssClass: string;
 }
 
 /**
- * A group of consecutive segments sharing the same block/container context.
- * Use `groupByBlocks()` to produce these from a flat `TextSegment[]`.
+ * A group of segments that share the same block/container context.
+ * Produced by `groupSegments()`.
  */
 export interface BlockGroup {
-  /** Block/container tag names active for this group (e.g. ['div']) */
+  /** Block tag names wrapping this group (e.g. ['ul', 'li']) */
   containerTagNames: string[];
-  /** CSS class string for block-level tags (e.g. 'rtp-div rtp-p') */
+  /** CSS classes for the block wrapper (e.g. 'rtp-ul rtp-li') */
   cssClass: string;
-  /** Inline CSS style string for block-level tags */
-  style: string;
-  /** Style object for block-level tags */
-  styleObject: Record<string, string>;
-  /** The text segments inside this block group */
+  /** The text segments inside this block */
   segments: TextSegment[];
 }
+
+/** Override default CSS for specific tags. Values are CSS property strings. */
+export type RichTextOverrideStyles = Partial<{
+  b: string;
+  i: string;
+  u: string;
+  s: string;
+  mark: string;
+  small: string;
+  sup: string;
+  sub: string;
+  h1: string;
+  h2: string;
+  h3: string;
+  h4: string;
+  h5: string;
+  h6: string;
+  code: string;
+  span: string;
+  p: string;
+  div: string;
+  ul: string;
+  ol: string;
+  li: string;
+  br: string;
+  hr: string;
+}>;
