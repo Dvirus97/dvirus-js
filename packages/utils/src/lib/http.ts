@@ -2,7 +2,7 @@
 
 import { tryCatch } from './tryCatch';
 
-export interface HttpError<TData> extends Error, _Response<TData> {}
+export interface HttpError<TData = any> extends Error, _Response<TData> {}
 
 export interface RequestInit extends globalThis.RequestInit {
   parse?: 'JSON' | 'TEXT' | 'BLOB' | 'ARRAYBUFFER';
