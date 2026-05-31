@@ -31,7 +31,7 @@ export default defineConfig(() => ({
       formats: ['es' as const],
     },
     rollupOptions: {
-      external: [],
+      external: ['@dvirus-js/utils'],
     },
   },
 }));
