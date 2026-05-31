@@ -1,3 +1,13 @@
+## 0.0.10 (2026-05-31)
+
+### 🩹 Fixes
+
+- **ci:** provide npm token to bun publish ([489684f](https://github.com/Dvirus97/dvirus-js/commit/489684f))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.9 (2026-05-31)
 
 This was a version bump only, there were no code changes.
