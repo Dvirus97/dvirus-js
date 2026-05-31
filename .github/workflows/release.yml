@@ -46,7 +46,9 @@ jobs:
       # Bun does not resolve ${NODE_AUTH_TOKEN} placeholders from setup-node's npmrc in all cases.
       # Write an explicit token entry so `bun publish` can authenticate non-interactively.
       - run: |
-          cat > ~/.npmrc <<EOF
+          NPMRC_PATH="${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
+          mkdir -p "$(dirname "$NPMRC_PATH")"
+          cat > "$NPMRC_PATH" <<EOF
           //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
           registry=https://registry.npmjs.org/
           always-auth=true
