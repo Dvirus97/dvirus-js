@@ -1,11 +1,13 @@
 {
-  "name": "@dvirus-js/web",
-  "version": "0.0.1",
-  "type": "module",
-  "main": "./index.js",
-  "types": "./index.d.ts",
-  "dependencies": {},
-  "publishConfig": {
-    "access": "public"
-  }
+    "name": "@dvirus-js/web",
+    "version": "0.0.1",
+    "type": "module",
+    "main": "./index.js",
+    "types": "./index.d.ts",
+    "dependencies": {
+        "@dvirus-js/utils": "0.0.1"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
 }
