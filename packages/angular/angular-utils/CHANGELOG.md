@@ -1,3 +1,7 @@
+## 0.0.701 (2026-05-31)
+
+This was a version bump only for angular-utils to align it with other projects, there were no code changes.
+
 ## 0.0.7 (2026-05-25)
 
 This was a version bump only for angular-utils to align it with other projects, there were no code changes.
