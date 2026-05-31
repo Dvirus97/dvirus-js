@@ -43,20 +43,13 @@ jobs:
       # Push version commit and tags back to main
       - run: git push --follow-tags
 
-      # Bun does not resolve ${NODE_AUTH_TOKEN} placeholders from setup-node's npmrc in all cases.
-      # Write an explicit token entry so `bun publish` can authenticate non-interactively.
-      - run: |
-          NPMRC_PATH="${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
-          mkdir -p "$(dirname "$NPMRC_PATH")"
-          cat > "$NPMRC_PATH" <<EOF
-          //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
-          registry=https://registry.npmjs.org/
-          always-auth=true
-          EOF
+      # Bun publish in CI reads NPM_CONFIG_TOKEN.
+      - run: bun pm whoami
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # Publish to npm
       - run: bunx nx release publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
