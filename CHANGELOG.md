@@ -1,3 +1,13 @@
+## 0.0.15 (2026-05-31)
+
+### 🩹 Fixes
+
+- http ([936f51a](https://github.com/Dvirus97/dvirus-js/commit/936f51a))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.14 (2026-05-31)
 
 This was a version bump only, there were no code changes.
