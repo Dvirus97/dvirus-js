@@ -1,3 +1,15 @@
+## 0.0.8 (2026-05-31)
+
+### 🩹 Fixes
+
+- add toaster ([f3716b4](https://github.com/Dvirus97/dvirus-js/commit/f3716b4))
+- create web lib ([fa62b51](https://github.com/Dvirus97/dvirus-js/commit/fa62b51))
+- create web package ([8b49142](https://github.com/Dvirus97/dvirus-js/commit/8b49142))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.701 (2026-05-31)
 
 ### 🩹 Fixes

@@ -1,3 +1,14 @@
+## 0.0.8 (2026-05-31)
+
+### 🩹 Fixes
+
+- prepare first 0.0.701 release flow ([29a6e68](https://github.com/Dvirus97/dvirus-js/commit/29a6e68))
+- add  react package with jsDocs and ReadMe ([6cf3517](https://github.com/Dvirus97/dvirus-js/commit/6cf3517))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.701 (2026-05-31)
 
 ### 🩹 Fixes

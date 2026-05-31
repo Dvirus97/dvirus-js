@@ -1,3 +1,13 @@
+## 0.0.8 (2026-05-31)
+
+### 🩹 Fixes
+
+- add getEmptyKeys util ([bcde711](https://github.com/Dvirus97/dvirus-js/commit/bcde711))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.701 (2026-05-31)
 
 ### 🩹 Fixes

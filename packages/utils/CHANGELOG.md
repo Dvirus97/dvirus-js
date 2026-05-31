@@ -1,3 +1,15 @@
+## 0.0.8 (2026-05-31)
+
+### 🩹 Fixes
+
+- htmlParser util ([80c83f2](https://github.com/Dvirus97/dvirus-js/commit/80c83f2))
+- add getEmptyKeys util ([bcde711](https://github.com/Dvirus97/dvirus-js/commit/bcde711))
+- http util ([82e6f97](https://github.com/Dvirus97/dvirus-js/commit/82e6f97))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.701 (2026-05-31)
 
 ### 🩹 Fixes

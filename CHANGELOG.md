@@ -1,3 +1,22 @@
+## 0.0.8 (2026-05-31)
+
+### 🩹 Fixes
+
+- http util ([82e6f97](https://github.com/Dvirus97/dvirus-js/commit/82e6f97))
+- add getEmptyKeys util ([bcde711](https://github.com/Dvirus97/dvirus-js/commit/bcde711))
+- add  react package with jsDocs and ReadMe ([6cf3517](https://github.com/Dvirus97/dvirus-js/commit/6cf3517))
+- create web package ([8b49142](https://github.com/Dvirus97/dvirus-js/commit/8b49142))
+- htmlParser util ([80c83f2](https://github.com/Dvirus97/dvirus-js/commit/80c83f2))
+- create web lib ([fa62b51](https://github.com/Dvirus97/dvirus-js/commit/fa62b51))
+- add toaster ([f3716b4](https://github.com/Dvirus97/dvirus-js/commit/f3716b4))
+- prepare first 0.0.701 release flow ([29a6e68](https://github.com/Dvirus97/dvirus-js/commit/29a6e68))
+- sync package-lock for react types ([cbc6a01](https://github.com/Dvirus97/dvirus-js/commit/cbc6a01))
+- **ci:** remove conflicting nx release flags ([1ef4214](https://github.com/Dvirus97/dvirus-js/commit/1ef4214))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.701 (2026-05-31)
 
 ### 🩹 Fixes
