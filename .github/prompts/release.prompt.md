@@ -19,8 +19,8 @@ You are a release manager for this Nx monorepo. Follow these steps to safely pub
 1. **Clean working tree**: Run `git status` — abort if there are uncommitted changes.
 2. **On main branch**: Run `git branch --show-current` — warn if not on `main`.
 3. **Pull latest**: Run `git pull --rebase` to ensure we're up to date.
-4. **Check npm auth**: Run `npm whoami` — if not authenticated, ask the user to run `npm login`.
-5. **Check current versions**: Run `npm view @dvirus-js/utils version`, `npm view @dvirus-js/angular version`, `npm view @dvirus-js/angular-signals version` to show what's currently on npm.
+4. **Check registry auth**: Run `bun pm whoami` — if not authenticated, ask the user to run `bunx npm login`.
+5. **Check current versions**: Run `bun pm view @dvirus-js/utils version`, `bun pm view @dvirus-js/angular version`, `bun pm view @dvirus-js/angular-signals version` to show what's currently on npm.
 6. **Check latest git tag**: Run `git tag --sort=-v:refname | head -5` to show recent tags.
 
 Show the user a summary of current state before proceeding.
@@ -52,7 +52,7 @@ git checkout -b release/next
 Run a dry run to preview the version bump and changelog:
 
 ```
-npx nx release --dry-run
+bunx nx release --dry-run
 ```
 
 Show the user what version will be generated and what packages will be affected. Ask for confirmation before proceeding.
@@ -62,7 +62,7 @@ Show the user what version will be generated and what packages will be affected.
 After user confirms:
 
 ```
-npx nx release --skip-publish --specifier=patch
+bunx nx release --skip-publish --specifier=patch
 ```
 
 This command will:
@@ -94,13 +94,13 @@ Once the PR is merged to `main`, the CI workflow (`.github/workflows/release.yml
 1. Detect the new commits
 2. Run `nx release --skip-publish --specifier=patch` to tag the version
 3. Push the tag back to the repo
-4. Run `npx nx release publish` to publish all packages to npm
+4. Run `bunx nx release publish` to publish all packages to npm
 
 ### Step 6: Verify
 
 After CI completes:
 
-- Run `npm view @dvirus-js/utils version` to confirm the new version is live
+- Run `bun pm view @dvirus-js/utils version` to confirm the new version is live
 - Check https://github.com/Dvirus97/dvirus-js/releases for the GitHub release
 
 ### Alternative: Skip CI, publish locally
@@ -109,7 +109,7 @@ If the user wants to publish without waiting for CI (e.g., urgent fix), after th
 
 ```
 git checkout main && git pull origin main
-npx nx release publish
+bunx nx release publish
 ```
 
 ## Error Handling
@@ -120,15 +120,15 @@ The version already exists on npm. This means:
 
 1. The git tag is out of sync with npm — check `git tag` vs `npm view <pkg> versions --json`
 2. Fix: Delete the stale local tag (`git tag -d <tag>`), then re-run the release
-3. If the version was partially published, bump manually: `npx nx release version --specifier=patch`
+3. If the version was partially published, bump manually: `bunx nx release version --specifier=patch`
 
 ### "npm ERR! 403 Forbidden"
 
-Not authenticated or not authorized. Run `npm login` and ensure the user has publish access to the `@dvirus-js` scope.
+Not authenticated or not authorized. Run `bunx npm login` and ensure the user has publish access to the `@dvirus-js` scope.
 
 ### Build failures
 
-Fix the build error first. The `preVersionCommand` in nx.json runs `npx nx run-many -t build` before versioning.
+Fix the build error first. The `preVersionCommand` in nx.json runs `bunx nx run-many -t build` before versioning.
 
 ## Important Notes
 

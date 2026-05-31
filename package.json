@@ -1,11 +1,12 @@
 {
   "name": "@dvirus-js/source",
   "version": "0.0.1",
+  "packageManager": "bun@1.3.2",
   "license": "MIT",
   "scripts": {
-    "-- create-angular-lib": "npx nx g @nx/angular:library <package name with path> --publishable --importPath=@dvirus-js/angular/<package name>",
-    "-- create-ts-lib2": "npx nx g @nx/angular:library <package name with path> --publishable --importPath=@dvirus-js/angular/<package name>",
-    "-- create-ts-lib": "npx nx g @nx/js:library <package name with path> --publishable --importPath=@dvirus-js/<package name>"
+    "-- create-angular-lib": "bunx nx g @nx/angular:library <package name with path> --publishable --importPath=@dvirus-js/angular/<package name>",
+    "-- create-ts-lib2": "bunx nx g @nx/angular:library <package name with path> --publishable --importPath=@dvirus-js/angular/<package name>",
+    "-- create-ts-lib": "bunx nx g @nx/js:library <package name with path> --publishable --importPath=@dvirus-js/<package name>"
   },
   "publishConfig": {
     "access": "public"

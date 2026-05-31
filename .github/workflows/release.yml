@@ -24,15 +24,19 @@ jobs:
           node-version: 22
           registry-url: 'https://registry.npmjs.org/'
 
-      - run: npm install
-      - run: npx nx run-many -t lint test build
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+      - run: bunx nx run-many -t lint test build
 
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       # Version + changelog + commit + tag (no publish yet)
-      - run: npx nx release --skip-publish --specifier=patch
+      - run: bunx nx release --skip-publish --specifier=patch
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
@@ -40,6 +44,6 @@ jobs:
       - run: git push --follow-tags
 
       # Publish to npm
-      - run: npx nx release publish
+      - run: bunx nx release publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
