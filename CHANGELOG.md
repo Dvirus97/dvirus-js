@@ -1,3 +1,13 @@
+## 0.0.11 (2026-05-31)
+
+### 🩹 Fixes
+
+- trigger ci rerun ([9f0f940](https://github.com/Dvirus97/dvirus-js/commit/9f0f940))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.10 (2026-05-31)
 
 ### 🩹 Fixes
