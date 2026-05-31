@@ -1,3 +1,3 @@
 export * from './lib/is-browser';
 export * from './lib/when-dom-ready';
-export * from './lib/DvirusToaster';
+export * from './lib/toaster';
