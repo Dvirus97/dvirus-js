@@ -32,10 +32,9 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       # Version + changelog + commit + tag (no publish yet)
-      - run: npx nx release --skip-publish
+      - run: npx nx release --skip-publish --specifier=patch --yes
         env:
           GITHUB_TOKEN: ${{ github.token }}
-
 
       # Push version commit and tags back to main
       - run: git push --follow-tags
