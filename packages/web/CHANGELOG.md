@@ -1,3 +1,13 @@
+## 0.0.16 (2026-05-31)
+
+### 🩹 Fixes
+
+- web dependencies ([7658b8e](https://github.com/Dvirus97/dvirus-js/commit/7658b8e))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.15 (2026-05-31)
 
 This was a version bump only for web to align it with other projects, there were no code changes.
