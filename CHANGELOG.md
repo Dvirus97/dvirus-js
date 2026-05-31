@@ -1,3 +1,7 @@
+## 0.0.9 (2026-05-31)
+
+This was a version bump only, there were no code changes.
+
 ## 0.0.8 (2026-05-31)
 
 ### 🩹 Fixes
