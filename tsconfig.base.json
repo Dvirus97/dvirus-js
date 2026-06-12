@@ -16,25 +16,24 @@
     ],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "baseUrl": ".",
     "paths": {
       "@dvirus-js/angular": [
-        "packages/angular/angular-utils/src/index.ts"
+        "./packages/angular/angular-utils/src/index.ts"
       ],
       "@dvirus-js/angular-signals": [
-        "packages/angular/signals/src/index.ts"
+        "./packages/angular/signals/src/index.ts"
       ],
       "@dvirus-js/angular-signals/signal-form": [
-        "packages/angular/signals/signal-form/src/public-api.ts"
+        "./packages/angular/signals/signal-form/src/public-api.ts"
       ],
       "@dvirus-js/react": [
-        "packages/react/utils/src/index.ts"
+        "./packages/react/utils/src/index.ts"
       ],
       "@dvirus-js/web": [
-        "packages/web/src/index.ts"
+        "./packages/web/src/index.ts"
       ],
       "@dvirus-js/utils": [
-        "packages/utils/src/index.ts"
+        "./packages/utils/src/index.ts"
       ]
     },
     //

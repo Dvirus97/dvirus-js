@@ -5,7 +5,7 @@ import {
   signalOrValue,
   SignalOrValueObj,
   writableSignal,
-} from '../../../../src/index';
+} from '@dvirus-js/angular-signals';
 import { collectValidationErrors, hasErrors } from './errors';
 
 import {

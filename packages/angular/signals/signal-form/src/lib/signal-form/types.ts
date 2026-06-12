@@ -1,5 +1,5 @@
 import { Signal, WritableSignal } from '@angular/core';
-import { SignalOrValue } from '../../../../src/index';
+import { SignalOrValue } from '@dvirus-js/angular-signals';
 
 /**
  * Recursively extracts the value type from a form structure.
