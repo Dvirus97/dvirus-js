@@ -1,9 +1,9 @@
 # Angular Signals Library
 
-`@dvirus-js/angular-signals` provides two things:
+This package exposes two entry points:
 
-- `signalForm`: typed Angular signal-based forms with controls, groups, arrays, validators, warnings, and disabled state.
-- signal utilities: helpers for Angular signals, reactive objects, debounced state, reactive `Map`/`Set`, and wrappers for Angular Reactive Forms.
+- `@dvirus-js/angular-signals`: signal utilities and Angular Reactive Forms signal bridges.
+- `@dvirus-js/angular-signals/signal-form`: typed signal-based forms with controls, groups, arrays, validators, warnings, and disabled state.
 
 ## Install
 
@@ -28,7 +28,7 @@ Peer dependencies: `@angular/core`, `@angular/forms`, and `rxjs`.
 Use `signalForm` to model nested objects and arrays with reactive value, error, warning, touched, dirty, and disabled state.
 
 ```ts
-import { signalForm, signalFormValidators } from '@dvirus-js/angular-signals';
+import { signalForm, signalFormValidators } from '@dvirus-js/angular-signals/signal-form';
 
 const profileForm = signalForm({
   name: {
@@ -57,18 +57,13 @@ profileForm.controls.age.firstErrorOrWarning();
 Validators and `disabled` rules can read sibling controls through `getControl`.
 
 ```ts
-import { signalForm, signalFormValidators } from '@dvirus-js/angular-signals';
+import { signalForm, signalFormValidators } from '@dvirus-js/angular-signals/signal-form';
 
 const accountForm = signalForm({
   role: 'user',
   adminCode: {
     value: '',
-    validators: [
-      ({ item, getControl }) =>
-        getControl('role').value() === 'admin' && !item.value
-          ? { requiredForAdmin: 'Admin code is required' }
-          : null,
-    ],
+    validators: [({ item, getControl }) => (getControl('role').value() === 'admin' && !item.value ? { requiredForAdmin: 'Admin code is required' } : null)],
     disabled: ({ getControl }) => getControl('role').value() !== 'admin',
   },
 });
@@ -107,20 +102,8 @@ console.log(formSig.controls.firstName.value());
 These helpers cover debounced state, reactive collections, reactive objects, and signal/value conversion.
 
 ```ts
-import {
-  effect,
-  signal,
-} from '@angular/core';
-import {
-  fromSignalObj,
-  signalDebounce,
-  signalMap,
-  signalNotifier,
-  signalObject,
-  signalOrValue,
-  signalSet,
-  toSignalObj,
-} from '@dvirus-js/angular-signals';
+import { effect, signal } from '@angular/core';
+import { fromSignalObj, signalDebounce, signalMap, signalNotifier, signalObject, signalOrValue, signalSet, toSignalObj } from '@dvirus-js/angular-signals';
 
 const search = signalDebounce({ debounceTime: 300, initialValue: '' });
 search.setDebounced('angular');

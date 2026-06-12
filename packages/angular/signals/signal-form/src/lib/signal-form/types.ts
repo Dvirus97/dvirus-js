@@ -1,16 +1,16 @@
 import { Signal, WritableSignal } from '@angular/core';
-import { SignalOrValue } from '../utils/signals.utils';
+import { SignalOrValue } from '../../../../src/index';
 
 /**
  * Recursively extracts the value type from a form structure.
- * 
+ *
  * Converts form control types to their underlying value types:
  * - Arrays become arrays of extracted values
  * - Objects become objects with extracted property values
  * - Primitives become `T | undefined`
- * 
+ *
  * @template T - The form structure type to extract values from
- * 
+ *
  * @example
  * ```typescript
  * type Person = { name: string; age: number };
@@ -26,14 +26,14 @@ export type SignalFormValueFor<T> = T extends (infer U)[]
 
 /**
  * Recursively defines the error structure for a form.
- * 
+ *
  * Mirrors the form structure where:
  * - Arrays become arrays of error structures
  * - Objects become objects with error properties
  * - Primitives become error maps (Record<string, string>) or undefined
- * 
+ *
  * @template T - The form structure type to create error structure for
- * 
+ *
  * @example
  * ```typescript
  * type Person = { name: string; hobbies: string[] };
@@ -49,13 +49,13 @@ export type SignalFormErrorFor<T> = T extends (infer U)[]
 
 /**
  * Represents the first error or warning found in a control.
- * 
+ *
  * @template Type - Either 'error' or 'warning' to distinguish validation type
- * 
+ *
  * @property name - The validator name that triggered this error/warning
  * @property message - The human-readable error/warning message
  * @property type - Whether this is an 'error' or 'warning'
- * 
+ *
  * @example
  * ```typescript
  * const firstError: FirstError<'error'> = {
@@ -71,13 +71,13 @@ export type FirstError<Type extends 'warning' | 'error'> =
 
 /**
  * Represents a single form control (primitive value) with validation and state management.
- * 
+ *
  * A control wraps a primitive value (string, number, etc.) and provides:
  * - Reactive value through Angular signals
  * - Validation with errors and warnings
  * - State tracking (touched, dirty, disabled)
  * - Manual error/warning management
- * 
+ *
  * @template TValue - The type of value this control manages
  */
 export interface SignalFormControl<TValue> {
@@ -166,10 +166,10 @@ export interface SignalFormControl<TValue> {
 
 /**
  * Represents a form array - a collection of form controls/groups with dynamic add/remove capabilities.
- * 
+ *
  * Manages an array of controls where each item can be a control, group, or nested array.
  * Provides methods for array manipulation (push, insert, remove) and tracks collective state.
- * 
+ *
  * @template TValue - The type of each item in the array
  */
 export interface SignalFormArray<TValue> {
@@ -290,10 +290,10 @@ export interface SignalFormArray<TValue> {
 
 /**
  * Represents a form group - a structured collection of named form controls.
- * 
+ *
  * Manages an object/record of controls where each property is a control, group, or array.
  * Provides type-safe access to controls and tracks collective validation state.
- * 
+ *
  * @template TData - The object type defining the structure and types of all controls
  */
 export interface SignalForm<TData extends object> {
@@ -391,14 +391,14 @@ export interface SignalForm<TData extends object> {
 
 /**
  * Type utility that maps a value type to its appropriate control interface.
- * 
+ *
  * Automatically determines the correct control type based on the value:
  * - Arrays → SignalFormArray
  * - Objects → SignalForm (group)
  * - Primitives → SignalFormControl
- * 
+ *
  * @template TValue - The value type to map to a control interface
- * 
+ *
  * @example
  * ```typescript
  * type StringControl = SignalFormControlLike<string>; // SignalFormControl<string>
@@ -414,13 +414,13 @@ export type SignalFormControlLike<TValue> = TValue extends (infer U)[]
 
 /**
  * Context object passed to validators and disabled functions.
- * 
+ *
  * Provides access to the current control's value and sibling controls,
  * enabling cross-field validation and dynamic behavior based on other form values.
- * 
+ *
  * @template TControls - Object type defining all available sibling controls
  * @template TValue - The type of the current control's value
- * 
+ *
  * @example
  * ```typescript
  * const validator: SignalFormValidatorFn<FormModel, string> = (ctx) => {
@@ -446,10 +446,10 @@ export interface SignalFormContext<TControls extends object, TValue> {
 
 /**
  * Return type for validation functions.
- * 
+ *
  * Validators return a map of error keys to messages when validation fails,
  * or null/empty when validation passes. Empty strings and null values are ignored.
- * 
+ *
  * @example
  * ```typescript
  * const result: SignalFormValidationError = { required: 'Field is required', min: 'Too small' };
@@ -463,16 +463,16 @@ export type SignalFormValidationError = Record<
 
 /**
  * Function signature for validators and warnings.
- * 
+ *
  * Takes a context with the current value and sibling controls,
  * returns error/warning messages or null when validation passes.
- * 
+ *
  * @template TControls - Object type defining available sibling controls
  * @template TValue - The type of value being validated
- * 
+ *
  * @param ctx - Validation context with current value and control accessor
  * @returns Error map when validation fails, null when it passes
- * 
+ *
  * @example
  * ```typescript
  * const minValidator: SignalFormValidatorFn<any, number> = ({ item }) => {
@@ -486,12 +486,12 @@ export type SignalFormValidatorFn<TControls extends object, TValue> = (
 
 /**
  * Configuration object for creating a form control with advanced options.
- * 
+ *
  * Allows specifying initial value, validators, warnings, and dynamic disabled logic.
- * 
+ *
  * @template TValue - The type of value the control will manage
  * @template TControls - Object type defining available sibling controls for validators
- * 
+ *
  * @example
  * ```typescript
  * const config: SignalFormControlConfig<number, FormModel> = {
@@ -515,12 +515,12 @@ export interface SignalFormControlConfig<TValue, TControls extends object> {
 
 /**
  * Input type accepted when creating a form control.
- * 
+ *
  * Flexible input that accepts:
  * - A raw value (primitive, signal)
  * - A configuration object with validators and options
  * - An existing SignalFormControl instance
- * 
+ *
  * @template TValue - The value type for the control
  * @template TControls - Object type defining available sibling controls
  */
@@ -531,7 +531,7 @@ export type SignalFormControlInput<TValue, TControls extends object> =
 
 /**
  * Input type accepted when creating a form group.
- * 
+ *
  * @template TData - Object type defining the structure of the group
  */
 export type SignalFormGroupInput<TData extends object> =
@@ -540,7 +540,7 @@ export type SignalFormGroupInput<TData extends object> =
 
 /**
  * Input type accepted when creating a form array.
- * 
+ *
  * @template TItem - The type of each item in the array
  * @template TControls - Object type defining available sibling controls
  */
@@ -550,12 +550,12 @@ export type SignalFormArrayInput<TItem, TControls extends object> =
 
 /**
  * Recursive input type that automatically maps to the correct control input type.
- * 
+ *
  * Determines the appropriate input type based on value structure:
  * - Arrays → SignalFormArrayInput
  * - Objects → SignalFormGroupInput
  * - Primitives → SignalFormControlInput
- * 
+ *
  * @template TValue - The value type to create an input for
  * @template TControls - Object type defining available sibling controls
  */
@@ -570,10 +570,10 @@ export type SignalFormInput<
 
 /**
  * Type for defining the inputs of a form group.
- * 
+ *
  * Maps each property of TData to its appropriate input type,
  * all properties are optional to allow partial form definitions.
- * 
+ *
  * @template TData - Object type defining the structure of the form
  */
 export type SignalFormInputs<TData extends object> = {
@@ -582,12 +582,12 @@ export type SignalFormInputs<TData extends object> = {
 
 /**
  * Function signature for dynamic disabled logic.
- * 
+ *
  * Determines if a control should be disabled based on form context.
- * 
+ *
  * @template TControls - Object type defining available sibling controls
  * @template TValue - The type of value in the control
- * 
+ *
  * @param ctx - Context with current value and sibling controls
  * @returns Boolean indicating if control should be disabled
  */

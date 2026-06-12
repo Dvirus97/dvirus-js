@@ -4,7 +4,8 @@ import {
   SignalOrValue,
   signalOrValue,
   SignalOrValueObj,
-} from '../utils/signals.utils';
+  writableSignal,
+} from '../../../../src/index';
 import { collectValidationErrors, hasErrors } from './errors';
 
 import {
@@ -17,7 +18,6 @@ import {
   SignalFormDisabledFn,
   SignalFormSetValueOptions,
 } from './types';
-import { writableSignal } from '../utils/';
 
 /**
  * Internal type for accessing sibling controls in a form.
