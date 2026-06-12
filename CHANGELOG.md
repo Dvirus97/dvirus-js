@@ -1,3 +1,14 @@
+## 0.0.17 (2026-06-12)
+
+### 🩹 Fixes
+
+- **signals:** split signal-form into secondary entry point subpath ([16b14f9](https://github.com/Dvirus97/dvirus-js/commit/16b14f9))
+- **tsconfig:** remove deprecated baseUrl and normalize path mappings ([b4e2ea0](https://github.com/Dvirus97/dvirus-js/commit/b4e2ea0))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.16 (2026-05-31)
 
 ### 🩹 Fixes

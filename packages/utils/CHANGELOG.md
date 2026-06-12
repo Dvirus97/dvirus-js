@@ -1,3 +1,13 @@
+## 0.0.17 (2026-06-12)
+
+### 🩹 Fixes
+
+- **signals:** split signal-form into secondary entry point subpath ([16b14f9](https://github.com/Dvirus97/dvirus-js/commit/16b14f9))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.16 (2026-05-31)
 
 This was a version bump only for utils to align it with other projects, there were no code changes.

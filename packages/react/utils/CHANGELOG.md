@@ -1,3 +1,7 @@
+## 0.0.17 (2026-06-12)
+
+This was a version bump only for react to align it with other projects, there were no code changes.
+
 ## 0.0.16 (2026-05-31)
 
 This was a version bump only for react to align it with other projects, there were no code changes.
