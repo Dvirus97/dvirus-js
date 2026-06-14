@@ -1,3 +1,13 @@
+## 0.0.20 (2026-06-14)
+
+### 🩹 Fixes
+
+- update utils tsconfig and react exports ([45f3506](https://github.com/Dvirus97/dvirus-js/commit/45f3506))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.19 (2026-06-14)
 
 ### 🩹 Fixes
