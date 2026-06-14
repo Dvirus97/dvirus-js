@@ -1,3 +1,7 @@
+## 0.0.19 (2026-06-14)
+
+This was a version bump only for signals to align it with other projects, there were no code changes.
+
 ## 0.0.18 (2026-06-14)
 
 This was a version bump only for signals to align it with other projects, there were no code changes.

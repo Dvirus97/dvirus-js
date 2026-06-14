@@ -1,3 +1,13 @@
+## 0.0.19 (2026-06-14)
+
+### 🩹 Fixes
+
+- **web:** replace workspace dependency for publish compatibility ([36cf55a](https://github.com/Dvirus97/dvirus-js/commit/36cf55a))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.18 (2026-06-14)
 
 ### 🩹 Fixes
