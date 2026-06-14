@@ -69,5 +69,10 @@ export function useResource<T, E = Error>(
     };
   }, [version, ...(options.deps || [])]);
 
-  return { value, isLoading, error, reload };
+  return {
+    value,
+    isLoading: isLoading.asReadOnly(),
+    error: error.asReadOnly(),
+    reload,
+  };
 }

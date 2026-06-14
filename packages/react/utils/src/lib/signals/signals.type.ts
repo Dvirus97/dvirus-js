@@ -49,9 +49,9 @@ export interface ResourceRef<T, E = Error> {
   /** Current resource value. */
   value: WritableSignal<T | undefined>;
   /** Tracks whether a request is in-flight. */
-  isLoading: WritableSignal<boolean>;
+  isLoading: Signal<boolean>;
   /** Last request error when present. */
-  error: WritableSignal<E | undefined>;
+  error: Signal<E | undefined>;
   /** Triggers a manual reload. */
   reload: () => void;
 }
