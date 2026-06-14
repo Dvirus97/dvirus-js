@@ -1,3 +1,13 @@
+## 0.0.18 (2026-06-14)
+
+### 🩹 Fixes
+
+- resolve tsconfig moduleResolution issues and update react utils docs ([bbc94b0](https://github.com/Dvirus97/dvirus-js/commit/bbc94b0))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.17 (2026-06-12)
 
 ### 🩹 Fixes
