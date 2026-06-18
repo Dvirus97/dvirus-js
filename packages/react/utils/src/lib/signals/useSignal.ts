@@ -2,43 +2,6 @@ import * as React from 'react';
 import { USE_SIGNAL, type Signal, type WritableSignal } from './signals.type';
 
 /**
- * Internal wrapper that keeps a stable signal function identity.
- */
-interface UseSignalWrapper<S> {
-  state: WritableSignal<S>;
-  setLatest: (next: S) => void;
-}
-
-/**
- * Creates a stable writable signal wrapper around React state.
- *
- * The returned `state` function keeps identity stable across renders while
- * reading from an internal `latestState` reference that is refreshed by
- * `setLatest` in the hook body.
- *
- * @template S State value type.
- * @param setState React state setter used by signal mutation helpers.
- * @returns Internal wrapper containing a writable signal and a latest-state sync function.
- */
-function createUseSignalWrapper<S>(
-  setState: React.Dispatch<React.SetStateAction<S>>,
-): UseSignalWrapper<S> {
-  let latestState: S;
-
-  return {
-    state: Object.assign(() => latestState, {
-      [USE_SIGNAL]: true,
-      set: (newState: S): void => setState(newState),
-      update: (updater: (prevState: S) => S): void => setState(updater),
-      asReadOnly: (): Signal<S> => () => latestState,
-    }),
-    setLatest: (next: S): void => {
-      latestState = next;
-    },
-  };
-}
-
-/**
  * React state hook exposed as a writable signal API.
  *
  * Returns a function-style signal with stable identity:
@@ -60,13 +23,42 @@ function createUseSignalWrapper<S>(
  * console.log(count()); // 1
  */
 export function useSignalState<S>(initVal: S | (() => S)): WritableSignal<S> {
-  const [state, setState] = React.useState<S>(initVal);
-  const [wrapper] = React.useState<UseSignalWrapper<S>>(() =>
-    createUseSignalWrapper(setState),
-  );
+  // 1. Dummy state purely to trigger React renders
+  const [, forceRender] = React.useState(0);
 
-  // Keep getter reads fresh while preserving function identity.
-  wrapper.setLatest(state);
+  // 2. We use useState's lazy-initializer function to create our Signal.
+  // This function runs EXACTLY ONCE when the component mounts.
+  const [signal] = React.useState(() => {
+    let internalValue =
+      typeof initVal === 'function' ? (initVal as () => S)() : initVal;
 
-  return wrapper.state;
+    function trigger() {
+      forceRender((n) => {
+        if (n >= 1000) return 1;
+        return n + 1;
+      });
+    }
+
+    // The core getter function reads the closure variable
+    const getter = () => internalValue;
+
+    // Build the object
+    const sig = Object.assign(getter, {
+      [USE_SIGNAL]: true,
+      set: (newState: S): void => {
+        internalValue = newState; // Update memory instantly
+        trigger(); // Tell React to render
+      },
+
+      update: (updater: (prevState: S) => S): void => {
+        internalValue = updater(internalValue); // Update memory instantly
+        trigger(); // Tell React to render
+      },
+      asReadOnly: (): Signal<S> => getter,
+    });
+    return sig;
+  });
+
+  // 3. Return the stable signal object
+  return signal;
 }

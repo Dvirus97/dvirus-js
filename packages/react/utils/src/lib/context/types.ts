@@ -1,5 +1,5 @@
-import { type JSX } from 'react/jsx-runtime';
 import { WritableSignal } from '../signals';
+import { ConsumerProps, ExoticComponent } from 'react';
 
 /**
  * Tuple type representing React state: [value, setValue].
@@ -69,7 +69,7 @@ export interface BaseContext<T> extends ProvideContext<{ value?: T }> {
    * @param props.select - Optional selector function to transform the state before rendering
    * @returns Rendered state value
    */
-  ValueRenderer: (props: { select?: (ctx: T) => unknown }) => JSX.Element;
+  Consumer: React.FC<ConsumerProps<T>>;
 }
 
 //
@@ -101,7 +101,7 @@ export interface BaseContextSignal<T> extends ProvideContext<{ value?: T }> {
    * @param props.select - Optional selector function to transform the value before rendering
    * @returns Rendered context value
    */
-  ValueRenderer: (props: { select?: (ctx: T) => unknown }) => JSX.Element;
+  Consumer: React.FC<ConsumerProps<T>>;
 }
 
 //
@@ -129,7 +129,7 @@ export interface ContextService<T> extends ProvideContext {
    * @returns The service instance, or undefined if optional and outside Provider
    * @throws Error if not optional and called outside Provider
    */
-  use: {
+  useContext: {
     (): T;
     (options: { optional: true }): T | undefined;
     (options?: { optional?: false }): T;

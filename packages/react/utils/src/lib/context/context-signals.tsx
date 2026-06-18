@@ -1,5 +1,5 @@
 import { useSignalState, type WritableSignal } from '../signals';
-import React from 'react';
+import React, { ConsumerProps } from 'react';
 import { BaseContextSignal } from './types';
 
 export function createBaseContextSignal<T>(
@@ -41,16 +41,14 @@ export function createBaseContextSignal<T>(
     return context;
   }
 
-  function ValueRenderer({ select }: { select?: (ctx: T) => unknown }) {
-    const state = useContext();
-
-    if (typeof state() === 'object' && !select) {
-      return <>{JSON.stringify(state())}</>;
-      // return <>{serialize(state())}</>;
-    }
-
-    return <>{select ? select(state()) : state()}</>;
+  function Consumer({ children }: ConsumerProps<T>) {
+    return <Context.Consumer>{(ctx) => children(ctx())}</Context.Consumer>;
   }
 
-  return { useContext, Provider, ValueRenderer, name };
+  return {
+    useContext,
+    Provider,
+    Consumer,
+    name,
+  };
 }

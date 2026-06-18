@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ConsumerProps } from 'react';
 import { BaseContext, ContextService, ReactState } from './types';
 
 /**
@@ -62,18 +62,11 @@ export function createBaseContext<T>(
     return context;
   }
 
-  function ValueRenderer({ select }: { select?: (ctx: T) => unknown }) {
-    const [state] = useContext();
-
-    if (typeof state === 'object' && !select) {
-      // return <>{serialize(state)}</>;
-      return <>{JSON.stringify(state)}</>;
-    }
-
-    return <>{select ? select(state) : state}</>;
+  function Consumer({ children }: ConsumerProps<T>) {
+    return <Context.Consumer>{(ctx) => children(ctx[0])}</Context.Consumer>;
   }
 
-  return { useContext, Provider, ValueRenderer, name } as BaseContext<T>;
+  return { useContext, Provider, Consumer, name };
 }
 
 /**
@@ -131,22 +124,21 @@ export function createBaseContext<T>(
  */
 export function createContextService<T>(
   name: string,
-  factory: () => T,
+  useFactory: () => T,
 ): ContextService<T> {
   const Context = React.createContext<T | undefined>(undefined);
 
   function Provider({ children }: React.PropsWithChildren) {
-    // Memoize the factory result so state inside (useState, etc.) persists
-    // across Provider re-renders. The factory itself is stable (closure),
-    // so [factory] is a safe dependency.
-    const service = React.useMemo(() => factory(), [factory]);
+    // factory is a custom hook — runs on every Provider render,
+    // but state references inside are stable (backed by useState).
+    const service = useFactory();
     return <Context.Provider value={service}>{children}</Context.Provider>;
   }
 
-  function use(): T;
-  function use(options: { optional: true }): T | undefined;
-  function use(options?: { optional?: false }): T;
-  function use(options?: { optional?: boolean }): T | undefined {
+  function useContext(): T;
+  function useContext(options: { optional: true }): T | undefined;
+  function useContext(options?: { optional?: false }): T;
+  function useContext(options?: { optional?: boolean }): T | undefined {
     const ctx = React.useContext(Context);
     if (ctx === undefined) {
       if (options?.optional) {
@@ -157,5 +149,5 @@ export function createContextService<T>(
     return ctx;
   }
 
-  return { use, Provider, name };
+  return { useContext, Provider, name };
 }
