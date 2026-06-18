@@ -1,14 +1,14 @@
 import { getCssClassPrefix } from './constant';
 import { RichTextOverrideStyles } from './types';
 
-const STYLE_ELEMENT_ID = 'html-text-parser-styles';
+const STYLE_ELEMENT_ID = 'dvirus-js-html-text-parser-styles';
 const _overrideStyles: RichTextOverrideStyles = {};
 
 function styles(prefix: string): string {
   const o = _overrideStyles;
   return `
     /* rtp = reach text parser */
-    
+
     .${prefix}b {
         font-weight: bold;
         ${o.b ?? ''}

@@ -136,9 +136,10 @@ export function createContextService<T>(
   const Context = React.createContext<T | undefined>(undefined);
 
   function Provider({ children }: React.PropsWithChildren) {
-    // factory is a custom hook — runs on every Provider render,
-    // but state references inside are stable (backed by useState).
-    const service = factory();
+    // Memoize the factory result so state inside (useState, etc.) persists
+    // across Provider re-renders. The factory itself is stable (closure),
+    // so [factory] is a safe dependency.
+    const service = React.useMemo(() => factory(), [factory]);
     return <Context.Provider value={service}>{children}</Context.Provider>;
   }
 
