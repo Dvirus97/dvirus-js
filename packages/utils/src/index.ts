@@ -10,3 +10,4 @@ export * from './lib/signals';
 export * from './lib/html-text-parser';
 export * from './lib/brand-type';
 export * from './lib/get-empty-keys';
+export * from './lib/serializer';

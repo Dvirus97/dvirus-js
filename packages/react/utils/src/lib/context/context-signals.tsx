@@ -33,11 +33,21 @@ export function createBaseContextSignal<T>(
     return <Context.Provider value={contextValue}>{children}</Context.Provider>;
   }
 
-  function useContext() {
+  function useContext(): WritableSignal<T>;
+  function useContext(options: {
+    optional: true;
+  }): WritableSignal<T> | undefined;
+  function useContext(options?: { optional?: false }): WritableSignal<T>;
+  function useContext(options?: {
+    optional?: boolean;
+  }): WritableSignal<T> | undefined {
     const context = React.useContext(Context);
+
     if (context === undefined) {
+      if (options?.optional) return undefined;
       throw new Error(`useContext must be used within a ${name} Provider`);
     }
+
     return context;
   }
 

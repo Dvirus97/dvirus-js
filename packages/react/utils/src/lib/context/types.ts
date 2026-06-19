@@ -1,5 +1,5 @@
 import { WritableSignal } from '../signals';
-import { ConsumerProps, ExoticComponent } from 'react';
+import { ConsumerProps } from 'react';
 
 /**
  * Tuple type representing React state: [value, setValue].
@@ -59,7 +59,11 @@ export interface BaseContext<T> extends ProvideContext<{ value?: T }> {
    * @throws Error if called outside the Provider
    * @returns Tuple [state, setState]
    */
-  useContext: () => ReactState<T>;
+  useContext: {
+    (): ReactState<T>;
+    (options: { optional: true }): ReactState<T> | undefined;
+    (options?: { optional?: false }): ReactState<T>;
+  };
 
   /**
    * React component that renders the context value.
@@ -91,7 +95,11 @@ export interface BaseContextSignal<T> extends ProvideContext<{ value?: T }> {
    * @throws Error if called outside the Provider
    * @returns Writable signal for reading and updating the context value
    */
-  useContext: () => WritableSignal<T>;
+  useContext: {
+    (): WritableSignal<T>;
+    (options: { optional: true }): WritableSignal<T> | undefined;
+    (options?: { optional?: false }): WritableSignal<T>;
+  };
 
   /**
    * React component that renders the context signal value.

@@ -54,9 +54,15 @@ export function createBaseContext<T>(
     return <Context.Provider value={contextValue}>{children}</Context.Provider>;
   }
 
-  function useContext() {
+  function useContext(): ReactState<T>;
+  function useContext(options: { optional: true }): ReactState<T> | undefined;
+  function useContext(options?: { optional?: false }): ReactState<T>;
+  function useContext(options?: {
+    optional?: boolean;
+  }): ReactState<T> | undefined {
     const context = React.useContext(Context);
     if (context === undefined) {
+      if (options?.optional) return undefined;
       throw new Error(`useContext must be used within a ${name} Provider`);
     }
     return context;
