@@ -1,3 +1,13 @@
+## 0.0.23 (2026-06-19)
+
+### 🩹 Fixes
+
+- add serialize util,  react signal & context ([ba7a845](https://github.com/Dvirus97/dvirus-js/commit/ba7a845))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.22 (2026-06-18)
 
 ### 🩹 Fixes
