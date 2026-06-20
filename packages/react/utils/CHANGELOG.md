@@ -1,3 +1,13 @@
+## 0.0.24 (2026-06-20)
+
+### 🩹 Fixes
+
+- webStorage, react store, func type ([a0b3860](https://github.com/Dvirus97/dvirus-js/commit/a0b3860))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.23 (2026-06-19)
 
 ### 🩹 Fixes
