@@ -5,7 +5,8 @@
   "main": "./index.js",
   "types": "./index.d.ts",
   "dependencies": {
-    "@types/react": "^19.2.15"
+    "@types/react": "^19.2.15",
+    "@dvirus-js/utils": "~0.0.1"
   },
   "peerDependencies": {
     "react": ">=18"
