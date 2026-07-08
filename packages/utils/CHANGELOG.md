@@ -1,3 +1,13 @@
+## 0.0.25 (2026-07-08)
+
+### 🩹 Fixes
+
+- add react signals ([aa71b07](https://github.com/Dvirus97/dvirus-js/commit/aa71b07))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.24 (2026-06-20)
 
 ### 🩹 Fixes

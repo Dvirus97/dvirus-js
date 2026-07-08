@@ -1,3 +1,15 @@
+## 0.0.25 (2026-07-08)
+
+### 🩹 Fixes
+
+- add react signals ([aa71b07](https://github.com/Dvirus97/dvirus-js/commit/aa71b07))
+- trigger ([8622ed9](https://github.com/Dvirus97/dvirus-js/commit/8622ed9))
+- add react eslint ([f3b9e8c](https://github.com/Dvirus97/dvirus-js/commit/f3b9e8c))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.24 (2026-06-20)
 
 ### 🩹 Fixes
