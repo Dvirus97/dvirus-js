@@ -93,6 +93,18 @@ export function useLinkedSignal<S, T>(
 }
 
 export function useResource<T, R>(
+  options: ResourceLoaderWithParams<T, R>,
+): ResourceRef<T>;
+export function useResource<T>(
+  options: ResourceLoaderWithoutParams<T>,
+): ResourceRef<T>;
+export function useResource<T, R>(
+  options: ResourceStreamWithParams<T, R>,
+): ResourceRef<T>;
+export function useResource<T>(
+  options: ResourceStreamWithoutParams<T>,
+): ResourceRef<T>;
+export function useResource<T, R>(
   options:
     | ResourceLoaderWithParams<T, R>
     | ResourceLoaderWithoutParams<T>
