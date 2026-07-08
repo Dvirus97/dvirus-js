@@ -3,43 +3,62 @@ import { deserialize, serialize } from '@dvirus-js/utils';
 /**
  * A utility to interact with Web Storage (localStorage or sessionStorage) with automatic serialization.
  *
+ * > pass {initVal: x} to make get fn return `T`, otherwise `T | undefined`
+ *
  * @template T - The type of the data being stored.
  * @param {string} key - The key under which the data is stored in the web storage.
  * @param {Object} [options] - Configuration options for the storage.
- * @param {T} [options.defaultValue] - A default value to return if no value is found in storage.
  * @param {Storage} [options.storage=localStorage] - The storage object to use (defaults to `localStorage`).
  * @returns {WebStorage<T>} An object containing methods to manage the stored data.
  */
 export function webStorage<T extends Record<string, unknown>>(
   key: string,
   options?: { storage?: Storage },
+): WebStorage<T>;
+
+/**
+ * A utility to interact with Web Storage (localStorage or sessionStorage) with automatic serialization.
+ *
+ * > pass {initVal: x} to make get fn return `T`, otherwise `T | undefined`
+ *
+ * @template T - The type of the data being stored.
+ * @param {string} key - The key under which the data is stored in the web storage.
+ * @param {Object} [options] - Configuration options for the storage.
+ * @param {T} [options.initVal] - A default value to return if no value is found in storage.
+ * @param {Storage} [options.storage=localStorage] - The storage object to use (defaults to `localStorage`).
+ * @returns {WebStorage<T>} An object containing methods to manage the stored data.
+ */
+export function webStorage<T extends Record<string, unknown>>(
+  key: string,
+  options: { storage?: Storage; initVal: T },
+): WebStorageWithInit<T>;
+
+export function webStorage<T extends Record<string, unknown>>(
+  key: string,
+  options?: { storage?: Storage; initVal?: T },
 ): WebStorage<T> {
   const storage = options?.storage ?? localStorage;
 
   /**
    * Retrieves the value from storage.
    *
+   * if in main function (webStorage) you pass `{initVal: x}` then get type is `T`. otherwise `T | undefined`
+   *
    * @returns {T | undefined} The deserialized value from storage, or the default value if defined, otherwise undefined.
    */
-  function get(): T | undefined;
-  /**
-   * Retrieves the value from storage with an overriding default value.
-   *
-   * @param {Object} config - Configuration for this specific retrieval.
-   * @param {T} config.defaultValue - An overriding default value for this call.
-   * @returns {T} The deserialized value from storage, or the provided default value.
-   */
-  function get(config: { defaultValue: T }): T;
-  function get(config?: { defaultValue?: T }): T | undefined {
+  function get(): T | undefined {
     if (typeof window === 'undefined') return undefined;
 
     try {
-      return deserialize(
-        storage.getItem(key) ?? serialize(config?.defaultValue),
-      ) as T;
+      const item = storage.getItem(key);
+      if (item === null) {
+        return options?.initVal;
+      }
+
+      return deserialize(item) as T;
     } catch (error) {
       console.warn(`Failed to parse ${key} from storage`, error);
-      return config?.defaultValue;
+      return options?.initVal;
     }
   }
 
@@ -66,11 +85,10 @@ export function webStorage<T extends Record<string, unknown>>(
   function update(value: Partial<T> | ((state: T) => Partial<T>)) {
     if (typeof window === 'undefined') return; // Guard for environment safety
     try {
-      const current = get();
-      if (current) {
-        const updated = typeof value === 'function' ? value(current) : value;
-        storage.setItem(key, serialize({ ...current, ...updated }));
-      }
+      const current = get() ?? ({} as T);
+      const delta = typeof value === 'function' ? value(current) : value;
+      const updated = { ...current, ...delta };
+      storage.setItem(key, serialize(updated));
     } catch (error) {
       console.error('Failed to update value in storage', error);
     }
@@ -93,19 +111,10 @@ export function webStorage<T extends Record<string, unknown>>(
 export interface WebStorage<T> {
   /**
    * Method to retrieve data from storage.
+   * @returns {T | undefined}
    */
-  get: {
-    /**
-     * @returns {T | undefined}
-     */
-    (): T | undefined;
-    /**
-     * @param {Object} config
-     * @param {T} config.defaultValue
-     * @returns {T}
-     */
-    (config: { defaultValue: T }): T;
-  };
+  get: () => T | undefined;
+
   /**
    * Method to set/overwrite data in storage.
    * @param {T} value - The value to store.
@@ -117,7 +126,21 @@ export interface WebStorage<T> {
   remove: () => void;
   /**
    * Method to partially update an object in storage.
+   * - if not exist - merge with `initVal` or empty object
    * @param {Partial<T> | ((state: T) => Partial<T>)} value - The partial update to apply, or a function that returns a partial update.
    */
   update: (value: Partial<T> | ((state: T) => Partial<T>)) => void;
+}
+
+/**
+ * Represents the interface for interacting with a specific key in Web Storage.
+ *
+ * @template T - The type of the data being managed.
+ */
+export interface WebStorageWithInit<T> extends WebStorage<T> {
+  /**
+   * Method to retrieve data from storage.
+   * @returns {T}
+   */
+  get: () => T;
 }

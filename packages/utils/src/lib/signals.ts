@@ -53,22 +53,26 @@ export interface ResourceLoaderParams<R> extends ResourceLoaderParamsNoParams {
   params?: NoInfer<R>;
 }
 
-interface ResourceLoaderWithParams<T, R> {
+export interface ResourceLoaderWithParams<T, R> {
   params: () => R;
   loader: (params: ResourceLoaderParams<R>) => Promise<T>;
 }
 
-interface ResourceLoaderWithoutParams<T> {
+export interface ResourceLoaderWithoutParams<T> {
   loader: (params: ResourceLoaderParamsNoParams) => Promise<T>;
 }
 
-interface ResourceStreamWithParams<T, R> {
+export interface ResourceStreamWithParams<T, R> {
   params: () => R;
-  stream: (params: ResourceLoaderParams<R>) => Signal<ResourceStreamItem<T> | undefined>;
+  stream: (
+    params: ResourceLoaderParams<R>,
+  ) => Signal<ResourceStreamItem<T> | undefined>;
 }
 
-interface ResourceStreamWithoutParams<T> {
-  stream: (params: ResourceLoaderParamsNoParams) => Signal<ResourceStreamItem<T> | undefined>;
+export interface ResourceStreamWithoutParams<T> {
+  stream: (
+    params: ResourceLoaderParamsNoParams,
+  ) => Signal<ResourceStreamItem<T> | undefined>;
 }
 
 const STACK: ComputeContext[] = [];
@@ -88,7 +92,10 @@ interface ReactiveNode<T> {
   hasSubscribers: () => boolean;
 }
 
-const createReactiveNode = <T>(getValue: () => T, onSubscribe?: () => void): ReactiveNode<T> => {
+const createReactiveNode = <T>(
+  getValue: () => T,
+  onSubscribe?: () => void,
+): ReactiveNode<T> => {
   const subs = new Set<Subscriber<T>>();
   let subscriberCount = 0;
 
@@ -150,7 +157,7 @@ export const signal = <T>(initial: T): WritableSignal<T> => {
   });
 };
 
-export const effect = (fn: (onCleanup: (cleanupFn: CleanupFn) => void) => void): EffectRef => {
+export const effect = (fn: () => void | CleanupFn): EffectRef => {
   const sources = new Set<CleanupFn>();
   let destroyed = false;
   let userCleanup: CleanupFn | null = null;
@@ -168,9 +175,9 @@ export const effect = (fn: (onCleanup: (cleanupFn: CleanupFn) => void) => void):
     sources.forEach((cleanup) => cleanup());
     sources.clear();
 
-    const onCleanup = (cleanupFn: CleanupFn): void => {
-      userCleanup = cleanupFn;
-    };
+    // const onCleanup = (cleanupFn: CleanupFn): void => {
+    //   userCleanup = cleanupFn;
+    // };
 
     STACK.push({
       setDirty: () => {
@@ -182,8 +189,25 @@ export const effect = (fn: (onCleanup: (cleanupFn: CleanupFn) => void) => void):
       addSource: (unsubscribe) => sources.add(unsubscribe),
     });
 
-    fn(onCleanup);
-    STACK.pop();
+    // const cleanUp = fn();
+    // if (typeof cleanUp == 'function') {
+    //   userCleanup = cleanUp;
+    // }
+    try {
+      const cleanUp = fn();
+
+      if (typeof cleanUp === 'function') {
+        if (destroyed) {
+          cleanUp();
+        } else {
+          userCleanup = cleanUp;
+        }
+      }
+    } finally {
+      STACK.pop();
+    }
+
+    // STACK.pop();
   };
 
   execute();
@@ -244,13 +268,15 @@ export const computed = <T>(fn: () => T): Signal<T> => {
   return read;
 };
 
-interface LinkedSignalOptions<S, T> {
+export interface LinkedSignalOptions<S, T> {
   source: () => S;
   computation: (source: S, previous: { source: S; value: T } | undefined) => T;
 }
 
 export function linkedSignal<T>(computation: () => T): WritableSignal<T>;
-export function linkedSignal<S, T>(options: LinkedSignalOptions<S, T>): WritableSignal<T>;
+export function linkedSignal<S, T>(
+  options: LinkedSignalOptions<S, T>,
+): WritableSignal<T>;
 export function linkedSignal<S, T>(
   optionsOrComputation: LinkedSignalOptions<S, T> | (() => T),
 ): WritableSignal<T> {
@@ -290,7 +316,10 @@ export function linkedSignal<S, T>(
     } else {
       const sourceValue = sourceFn?.() as S;
       cachedValue = (
-        computationFn as (source: S, previous: { source: S; value: T } | undefined) => T
+        computationFn as (
+          source: S,
+          previous: { source: S; value: T } | undefined,
+        ) => T
       )(sourceValue, prevSource);
       prevSource = { source: sourceValue, value: cachedValue };
     }
@@ -332,15 +361,25 @@ export function linkedSignal<S, T>(
 class ResourceErrorStateError extends Error {
   constructor(cause: unknown) {
     const detail = cause instanceof Error ? `:\n${cause.message}` : '';
-    super(`Cannot read resource value while in error state${detail}`, { cause });
+    super(`Cannot read resource value while in error state${detail}`, {
+      cause,
+    });
     this.name = 'ResourceErrorState';
   }
 }
 
-export function resource<T, R>(options: ResourceLoaderWithParams<T, R>): ResourceRef<T>;
-export function resource<T>(options: ResourceLoaderWithoutParams<T>): ResourceRef<T>;
-export function resource<T, R>(options: ResourceStreamWithParams<T, R>): ResourceRef<T>;
-export function resource<T>(options: ResourceStreamWithoutParams<T>): ResourceRef<T>;
+export function resource<T, R>(
+  options: ResourceLoaderWithParams<T, R>,
+): ResourceRef<T>;
+export function resource<T>(
+  options: ResourceLoaderWithoutParams<T>,
+): ResourceRef<T>;
+export function resource<T, R>(
+  options: ResourceStreamWithParams<T, R>,
+): ResourceRef<T>;
+export function resource<T>(
+  options: ResourceStreamWithoutParams<T>,
+): ResourceRef<T>;
 export function resource<T, R>(
   options:
     | ResourceLoaderWithParams<T, R>
@@ -377,25 +416,33 @@ export function resource<T, R>(
   const isStream = 'stream' in options;
 
   if (isStream) {
-    const streamSource = signal<Signal<ResourceStreamItem<T> | undefined> | undefined>(undefined);
+    const streamSource = signal<
+      Signal<ResourceStreamItem<T> | undefined> | undefined
+    >(undefined);
 
     // Effect 1: call stream when params/reload change, store the returned signal
-    const streamRef = effect((cleanupFn) => {
+    const streamRef = effect(() => {
       reloadTrigger();
 
       const controller = new AbortController();
-      cleanupFn(() => controller.abort());
       // STACK[STACK.length - 1].addSource(onCleanup);
 
       const params = hasParams
-        ? (options as ResourceLoaderWithParams<T, R> | ResourceStreamWithParams<T, R>).params()
+        ? (
+            options as
+              | ResourceLoaderWithParams<T, R>
+              | ResourceStreamWithParams<T, R>
+          ).params()
         : undefined;
 
       status.set('loading');
       error.set(undefined);
 
-      const streamFn = (options as ResourceStreamWithParams<T, R> | ResourceStreamWithoutParams<T>)
-        .stream;
+      const streamFn = (
+        options as
+          | ResourceStreamWithParams<T, R>
+          | ResourceStreamWithoutParams<T>
+      ).stream;
       const source = hasParams
         ? (streamFn as ResourceStreamWithParams<T, R>['stream'])({
             params: params,
@@ -406,6 +453,7 @@ export function resource<T, R>(
           });
 
       streamSource.set(source);
+      return () => controller.abort();
     });
 
     // Effect 2: read the stream signal reactively without re-calling stream
@@ -442,24 +490,29 @@ export function resource<T, R>(
     };
   }
 
-  const ref = effect((onCleanup) => {
+  const ref = effect(() => {
     reloadTrigger();
 
     const params = hasParams
-      ? (options as ResourceLoaderWithParams<T, R> | ResourceStreamWithParams<T, R>).params()
+      ? (
+          options as
+            | ResourceLoaderWithParams<T, R>
+            | ResourceStreamWithParams<T, R>
+        ).params()
       : undefined;
 
     status.set('loading');
     error.set(undefined);
 
     const controller = new AbortController();
-    onCleanup(() => controller.abort());
 
     const loaderParams = hasParams
       ? { params: params, abortSignal: controller.signal }
       : { abortSignal: controller.signal };
 
-    (options.loader as ResourceLoaderWithParams<T, R>['loader'])(loaderParams).then(
+    (options.loader as ResourceLoaderWithParams<T, R>['loader'])(
+      loaderParams,
+    ).then(
       (result) => {
         if (!controller.signal.aborted) {
           _value.set(result);
@@ -473,6 +526,8 @@ export function resource<T, R>(
         }
       },
     );
+
+    return () => controller.abort();
   });
 
   return {

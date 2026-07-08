@@ -1,9 +1,13 @@
 export interface ObjectParserOptions {
+  /** Whether to include undefined values in the serialized output. Defaults to true. */
   includeUndefined?: boolean;
+  /** Whether to include reference IDs for circular references. Defaults to false. */
   withRefs?: boolean;
+  /** Whitespace to use for formatting the output. Passed to JSON.stringify. */
   space?: number | string;
 }
 
+/** Type representing a JSON-like value that can be serialized. */
 type JsonLike =
   | string
   | number
@@ -12,8 +16,13 @@ type JsonLike =
   | JsonLike[]
   | { [key: string]: JsonLike };
 
+/** Type representing any function. */
 type AnyFunction = (...args: unknown[]) => unknown;
 
+/**
+ * Type that represents the result of deserializing a value of type T.
+ * This type maps special types (like Date, Set, Map, etc.) to their deserialized counterparts.
+ */
 export type DeserializeResult<T> = T extends AnyFunction
   ? string
   : T extends symbol
@@ -40,6 +49,12 @@ export interface DeserializeOptions<T = unknown> {
   validate?: (value: unknown) => value is DeserializeResult<T>;
 }
 
+/**
+ * Determines whether a value should be included in the serialization based on the includeUndefined flag.
+ * @param value - The value to check.
+ * @param includeUndefined - If true, undefined values are included; otherwise, they are excluded.
+ * @returns True if the value should be included, false otherwise.
+ */
 function shouldIncludeValue(
   value: unknown,
   includeUndefined: boolean,
@@ -48,6 +63,15 @@ function shouldIncludeValue(
   return value !== undefined;
 }
 
+/**
+ * Normalizes a value to a JSON-like representation, handling special types and circular references.
+ * @param value - The value to normalize.
+ * @param includeUndefined - Whether to include undefined values.
+ * @param withRefs - Whether to include reference IDs for circular references.
+ * @param seen - A map tracking objects that have been seen to detect circular references.
+ * @param nextId - An object with a value property that is the next available ID for referencing.
+ * @returns A JSON-like representation of the value, or undefined if the value should be skipped.
+ */
 function normalizeValue(
   value: unknown,
   includeUndefined: boolean,
@@ -232,6 +256,12 @@ function normalizeValue(
   return value as JsonLike;
 }
 
+/**
+ * Revives a normalized JSON-like value back to its original form, restoring special types and circular references.
+ * @param value - The normalized value to revive.
+ * @param objectMap - A map used to track object IDs for circular reference resolution.
+ * @returns The revived value.
+ */
 function reviveValue(
   value: unknown,
   objectMap: Map<number, unknown> = new Map(),
@@ -316,6 +346,12 @@ function reviveValue(
   return value;
 }
 
+/**
+ * Serializes a value to a JSON string, handling special types and circular references.
+ * @param input - The value to serialize.
+ * @param options - Options for serialization.
+ * @returns A JSON string representing the input value.
+ */
 export function serialize<T>(
   input: T,
   options: ObjectParserOptions = {},
@@ -339,6 +375,12 @@ export function serialize<T>(
   return JSON.stringify(normalized, null, space);
 }
 
+/**
+ * Deserializes a JSON string back to its original value, restoring special types and circular references.
+ * @param value - The JSON string to deserialize.
+ * @param options - Options for deserialization.
+ * @returns The deserialized value.
+ */
 export function deserialize<T = unknown>(
   value: string,
   options: DeserializeOptions<T> = {},
