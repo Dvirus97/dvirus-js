@@ -1,3 +1,13 @@
+## 0.0.26 (2026-07-08)
+
+### 🩹 Fixes
+
+- resource types ([08dde3c](https://github.com/Dvirus97/dvirus-js/commit/08dde3c))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.25 (2026-07-08)
 
 ### 🩹 Fixes
