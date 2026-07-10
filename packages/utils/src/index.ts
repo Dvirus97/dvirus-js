@@ -6,7 +6,7 @@ export * from './lib/delay';
 export * from './lib/getProp';
 export * from './lib/Result';
 export * from './lib/to-array';
-export * from './lib/signals';
+// export * from './lib/signals';
 export * from './lib/html-text-parser';
 export * from './lib/brand-type';
 export * from './lib/get-empty-keys';

@@ -2,7 +2,7 @@ import React, { ReactNode } from 'react';
 import { useComputed, useSignal } from '../hooks';
 import { For } from './For';
 import { ConditionalRender, ElseSlot, ThenSlot } from './If';
-import { effect } from '@dvirus-js/utils';
+import { effect } from '@dvirus-js/utils/signals';
 
 type ReactiveProps<Props> = {
   [K in keyof Props as K extends `on${string}`

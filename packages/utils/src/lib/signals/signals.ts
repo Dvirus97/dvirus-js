@@ -7,23 +7,38 @@ interface ComputeContext {
   addSource: (cleanup: CleanupFn) => void;
 }
 
+/**
+ * Internal marker used to identify values created as signals.
+ */
 export const SIGNAL: unique symbol = Symbol('SIGNAL');
 
+/**
+ * Returns true when a value is a signal produced by this module.
+ */
 export const isSignal = (value: unknown): value is Signal<unknown> =>
   typeof value === 'function' && SIGNAL in value;
 
+/**
+ * A read-only reactive value that can be subscribed to.
+ */
 export interface Signal<T> {
   (): T;
   [SIGNAL]: true;
   subscribe: (fn: Subscriber<T>) => CleanupFn;
 }
 
+/**
+ * A writable reactive value that can be updated imperatively.
+ */
 export interface WritableSignal<T> extends Signal<T> {
   set: (value: T) => void;
   update: (fn: UpdateFn<T>) => void;
   asReadonly: () => Signal<T>;
 }
 
+/**
+ * A handle returned by effect that can be destroyed to stop the effect.
+ */
 export interface EffectRef {
   destroy: CleanupFn;
 }
@@ -32,6 +47,9 @@ type ResourceStatus = 'idle' | 'loading' | 'resolved' | 'error';
 
 export type ResourceStreamItem<T> = { value: T } | { error: unknown };
 
+/**
+ * A reactive resource handle with status and value signals.
+ */
 export interface ResourceRef<T> {
   readonly value: Signal<T | undefined>;
   readonly status: Signal<ResourceStatus>;
@@ -43,25 +61,41 @@ export interface ResourceRef<T> {
   destroy: CleanupFn;
 }
 
+/**
+ * Parameters passed to a resource loader/stream when no params are needed.
+ */
 export interface ResourceLoaderParamsNoParams {
   abortSignal: AbortSignal;
   // previous: {
   //     status: ResourceStatus;
   // };
 }
+
+/**
+ * Parameters passed to a resource loader/stream with optional params.
+ */
 export interface ResourceLoaderParams<R> extends ResourceLoaderParamsNoParams {
   params?: NoInfer<R>;
 }
 
+/**
+ * Describes a resource loader that depends on parameters.
+ */
 export interface ResourceLoaderWithParams<T, R> {
   params: () => R;
   loader: (params: ResourceLoaderParams<R>) => Promise<T>;
 }
 
+/**
+ * Describes a resource loader that does not depend on parameters.
+ */
 export interface ResourceLoaderWithoutParams<T> {
   loader: (params: ResourceLoaderParamsNoParams) => Promise<T>;
 }
 
+/**
+ * Describes a resource stream that depends on parameters.
+ */
 export interface ResourceStreamWithParams<T, R> {
   params: () => R;
   stream: (
@@ -69,6 +103,9 @@ export interface ResourceStreamWithParams<T, R> {
   ) => Signal<ResourceStreamItem<T> | undefined>;
 }
 
+/**
+ * Describes a resource stream that does not depend on parameters.
+ */
 export interface ResourceStreamWithoutParams<T> {
   stream: (
     params: ResourceLoaderParamsNoParams,
@@ -77,6 +114,42 @@ export interface ResourceStreamWithoutParams<T> {
 
 const STACK: ComputeContext[] = [];
 
+// Batching support: while in a batch, notifications from signals are queued
+// and flushed once the outermost batch completes. This reduces the number
+// of subscriber calls when many signals are updated together.
+let BATCH_LEVEL = 0;
+const PENDING = new Map<
+  object,
+  { value: unknown; deliver: (v: unknown) => void }
+>();
+
+/**
+ * Runs a callback while coalescing signal notifications until the batch ends.
+ *
+ * This is useful when several signals are updated in one logical step and you
+ * want subscribers to react once instead of once per intermediate change.
+ */
+export const batch = <T>(fn: () => T): T => {
+  BATCH_LEVEL++;
+  try {
+    return fn();
+  } finally {
+    BATCH_LEVEL--;
+    if (BATCH_LEVEL === 0) {
+      // Capture and clear pending before delivering to avoid re-entrancy
+      const entries = Array.from(PENDING.entries());
+      PENDING.clear();
+      for (const [, { value, deliver }] of entries) {
+        // deliver the last value for each reactive node
+        deliver(value);
+      }
+    }
+  }
+};
+
+/**
+ * Runs a callback without registering any dependencies from the current context.
+ */
 export const untracked = <T>(fn: () => T): T => {
   const saved = STACK.splice(0, STACK.length);
   try {
@@ -109,7 +182,22 @@ const createReactiveNode = <T>(
     }
   };
 
+  // unique key for this reactive node used by batching map
+  const nodeKey = {};
+
   const notify = (v: T): void => {
+    if (BATCH_LEVEL > 0) {
+      // store latest value and a deliver function that will invoke current subscribers
+      PENDING.set(nodeKey, {
+        value: v,
+        deliver: (val: unknown) => {
+          // use a snapshot of subscribers to avoid mutation while iterating
+          for (const fn of Array.from(subs)) fn(val as T);
+        },
+      });
+      return;
+    }
+
     for (const fn of Array.from(subs)) fn(v);
   };
 
@@ -136,6 +224,9 @@ const createReactiveNode = <T>(
   return { read: readSignal, notify, hasSubscribers };
 };
 
+/**
+ * Creates a writable signal with an initial value.
+ */
 export const signal = <T>(initial: T): WritableSignal<T> => {
   let value: T = initial;
 
@@ -157,6 +248,9 @@ export const signal = <T>(initial: T): WritableSignal<T> => {
   });
 };
 
+/**
+ * Creates a reactive effect that re-runs when any read signal changes.
+ */
 export const effect = (fn: () => void | CleanupFn): EffectRef => {
   const sources = new Set<CleanupFn>();
   let destroyed = false;
@@ -225,6 +319,9 @@ export const effect = (fn: () => void | CleanupFn): EffectRef => {
   };
 };
 
+/**
+ * Creates a derived signal whose value is recomputed when its dependencies change.
+ */
 export const computed = <T>(fn: () => T): Signal<T> => {
   const sources = new Set<CleanupFn>();
   let cachedValue: T;
@@ -273,7 +370,15 @@ export interface LinkedSignalOptions<S, T> {
   computation: (source: S, previous: { source: S; value: T } | undefined) => T;
 }
 
+/**
+ * Creates a writable signal whose value can be explicitly overridden.
+ *
+ * When used with an options object, the signal recomputes from a source value.
+ */
 export function linkedSignal<T>(computation: () => T): WritableSignal<T>;
+/**
+ * Creates a linked signal that derives its value from the supplied source.
+ */
 export function linkedSignal<S, T>(
   options: LinkedSignalOptions<S, T>,
 ): WritableSignal<T>;
@@ -368,15 +473,27 @@ class ResourceErrorStateError extends Error {
   }
 }
 
+/**
+ * Creates a reactive resource backed by a loader or stream.
+ */
 export function resource<T, R>(
   options: ResourceLoaderWithParams<T, R>,
 ): ResourceRef<T>;
+/**
+ * Creates a reactive resource backed by a loader without parameters.
+ */
 export function resource<T>(
   options: ResourceLoaderWithoutParams<T>,
 ): ResourceRef<T>;
+/**
+ * Creates a reactive resource backed by a stream with parameters.
+ */
 export function resource<T, R>(
   options: ResourceStreamWithParams<T, R>,
 ): ResourceRef<T>;
+/**
+ * Creates a reactive resource backed by a stream without parameters.
+ */
 export function resource<T>(
   options: ResourceStreamWithoutParams<T>,
 ): ResourceRef<T>;
@@ -438,11 +555,8 @@ export function resource<T, R>(
       status.set('loading');
       error.set(undefined);
 
-      const streamFn = (
-        options as
-          | ResourceStreamWithParams<T, R>
-          | ResourceStreamWithoutParams<T>
-      ).stream;
+      const streamFn = options.stream;
+
       const source = hasParams
         ? (streamFn as ResourceStreamWithParams<T, R>['stream'])({
             params: params,
@@ -481,7 +595,7 @@ export function resource<T, R>(
       set: setValue,
       update: updateValue,
       reload: (): void => {
-        reloadTrigger.update((n) => n + 1);
+        reloadTrigger.update((n) => (n > 1000 ? 1 : n + 1));
       },
       destroy: (): void => {
         streamRef.destroy();
@@ -493,13 +607,7 @@ export function resource<T, R>(
   const ref = effect(() => {
     reloadTrigger();
 
-    const params = hasParams
-      ? (
-          options as
-            | ResourceLoaderWithParams<T, R>
-            | ResourceStreamWithParams<T, R>
-        ).params()
-      : undefined;
+    const params = hasParams ? options.params() : undefined;
 
     status.set('loading');
     error.set(undefined);
@@ -538,7 +646,7 @@ export function resource<T, R>(
     set: setValue,
     update: updateValue,
     reload: (): void => {
-      reloadTrigger.update((n) => n + 1);
+      reloadTrigger.update((n) => (n > 1000 ? 1 : n + 1));
     },
     destroy: () => ref.destroy(),
   };

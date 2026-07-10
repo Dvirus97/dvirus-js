@@ -11,6 +11,9 @@ npm install @dvirus-js/utils
 ## Exports
 
 - `normalizeString`, `convertCase`: normalize text and convert between cases.
+
+For a focused guide to the reactive primitives (`signal`, `computed`, `effect`, `linkedSignal`, `resource`, `batch`, and `untracked`), see [src/lib/signals/README.md](src/lib/signals/README.md).
+
 - `tryCatch`, `tryCatchAsync`, `Result`: tuple-style and object-style error handling.
 - `http`: small `fetch` wrapper with `get`, `post`, `put`, `patch`, `delete`.
 - `groupBy`, `toArray`, `getProp`: data shaping helpers.

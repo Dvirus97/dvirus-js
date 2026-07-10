@@ -12,7 +12,7 @@ import {
   signal,
   untracked,
   WritableSignal,
-} from '@dvirus-js/utils';
+} from '@dvirus-js/utils/signals';
 import * as React from 'react';
 import { getSignalsConfig } from './context';
 // import { computed } from './computed';

@@ -34,6 +34,9 @@
       ],
       "@dvirus-js/utils": [
         "./packages/utils/src/index.ts"
+      ],
+      "@dvirus-js/utils/signals": [
+        "./packages/utils/src/signals.ts"
       ]
     },
     //
