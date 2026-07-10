@@ -116,7 +116,7 @@ export function createBaseContext<T>(
  *
  * // Inject anywhere below:
  * function MyComponent() {
- *   const { count, increment, reset } = CounterService.use();
+ *   const { count, increment, reset } = CounterService.useContext();
  *   // const service: T | undefined = service.use({optional: true}) can be used to avoid errors if Provider is missing
  *   return (
  *     <div>
