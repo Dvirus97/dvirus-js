@@ -13,6 +13,17 @@ type ForComponentProps<
 > = ForProps<Item, As> &
   Omit<React.ComponentPropsWithRef<As>, keyof ForProps<Item, As>>;
 
+/**
+ * Render a list of items reactively. The `each` prop is a function returning
+ * an array (usually a signal or computed). The component tracks the list and
+ * renders children for each item. Optionally `track` can be provided to
+ * generate stable keys.
+ *
+ * @template Item - item type
+ * @template As - element type to render as (defaults to 'div')
+ * @param {ForComponentProps<Item, As> & { children?: (item: Item, index: number) => React.ReactNode }} props - For props
+ * @returns {JSX.Element} the rendered list
+ */
 export function For<
   Item,
   As extends keyof React.JSX.IntrinsicElements = 'div',

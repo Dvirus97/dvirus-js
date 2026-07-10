@@ -1,3 +1,8 @@
+/**
+ * Public entrypoint for the React-friendly signals utilities.
+ * Re-exports components, context, and hooks used to integrate the
+ * underlying signals implementation with React.
+ */
 export * from './components';
 export * from './context';
 

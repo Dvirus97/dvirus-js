@@ -2,16 +2,35 @@ import React from 'react';
 import { useComputed, useSignal } from '../hooks';
 
 // 🌟 Named structural selector directives
+/**
+ * Simple wrapper used to mark the `then` branch inside <S> or <ConditionalRender>.
+ * It merely forwards its children.
+ *
+ * @param {{children: React.ReactNode}} props - slot children
+ */
 export function ThenSlot({ children }: { children: React.ReactNode }) {
   return <React.Fragment>{children}</React.Fragment>;
 }
 
+/**
+ * Simple wrapper used to mark the `else` branch inside <S> or <ConditionalRender>.
+ * It merely forwards its children.
+ *
+ * @param {{children: React.ReactNode}} props - slot children
+ */
 export function ElseSlot({ children }: { children: React.ReactNode }) {
   return <React.Fragment>{children}</React.Fragment>;
 }
 
 // Assign them as static properties onto S so users can type <S.Then> and <S.Else>
 
+/**
+ * Render children conditionally based on a reactive condition function.
+ * Accepts <ThenSlot> and <ElseSlot> children to declaratively specify branches.
+ *
+ * @param {{condition: () => boolean, children: React.ReactNode}} props - conditional render props
+ * @returns {JSX.Element|null} chosen branch to render
+ */
 export function ConditionalRender({
   condition,
   children,

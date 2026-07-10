@@ -36,6 +36,21 @@ export type SComponentProps<
   Omit<React.ComponentPropsWithRef<As>, keyof SmartProps<T, As>> &
   ReactiveProps<Omit<React.ComponentPropsWithRef<As>, `on${string}`>>;
 
+/**
+ * Versatile reactive component "S" that provides a compact API to render
+ * reactive text, conditional branches and lists using signal-backed props.
+ *
+ * Features:
+ * - $if: conditional rendering via a reactive boolean
+ * - $for: reactive list rendering
+ * - value: reactive primitive rendering (optimized)
+ * - dynamic attributes: prefix props with `$` to bind reactive values to DOM attributes
+ *
+ * @template T - value/item type used by the component
+ * @template As - element tag to render as
+ * @param {SComponentProps<T, As>} props - component props
+ * @returns {JSX.Element} the rendered element
+ */
 export function S<
   T = unknown,
   As extends keyof React.JSX.IntrinsicElements = 'div',

@@ -74,8 +74,8 @@ export function signalDebounce<T>(options: {
 
   if (options.source) {
     const eRef = effect(() => {
-      const val = options.source?.();
-      if (!val) return;
+      if (!options.source) return;
+      const val = options.source();
       untracked(() => scheduleDebounce(val));
     });
     destroy = eRef.destroy;

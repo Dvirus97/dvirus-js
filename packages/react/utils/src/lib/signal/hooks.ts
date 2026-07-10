@@ -33,6 +33,19 @@ import { getSignalsConfig } from './context';
 // } from './types';
 
 const dummySignal = signal<false>(false);
+/**
+ * Conditionally subscribes to a signal for React re-rendering based on a
+ * watch flag (or the global signals config). When watching is enabled the
+ * returned function will be a wrapped signal that triggers React updates;
+ * otherwise the original signal is returned unchanged.
+ *
+ * @template T - value type of the signal
+ * @template TSignal - the concrete Signal type
+ * @param {{watch: boolean | undefined; signal: TSignal}} options - options
+ * @param options.watch - explicit per-hook override for watching signal changes
+ * @param options.signal - the signal to optionally watch
+ * @returns {TSignal} Either the original signal or a wrapper that triggers React updates
+ */
 function watchSignalChanges<T, TSignal extends Signal<T> = Signal<T>>(options: {
   watch: boolean | undefined;
   signal: TSignal;
@@ -46,17 +59,33 @@ function watchSignalChanges<T, TSignal extends Signal<T> = Signal<T>>(options: {
   }
 }
 
+/**
+ * React hook that reads a Signal and subscribes the component to changes.
+ * Uses React.useSyncExternalStore under the hood to integrate with React's
+ * concurrent rendering model.
+ *
+ * @template T - the value type produced by the signal
+ * @param {Signal<T>} sig - the signal to read and subscribe to
+ * @returns {T} the current value of the provided signal
+ */
 export function useSignal<T>(sig: Signal<T>): T {
   return React.useSyncExternalStore(sig.subscribe, () => {
-    // const prevSubscriber = currentSubscriber.current;
-    // currentSubscriber.current = null; // Preventing double subscription during value extraction in React
-    // const val = sig();
-    // currentSubscriber.current = prevSubscriber;
-    const val = untracked(sig);
-    return val;
+    return untracked(sig);
   });
 }
 
+/**
+ * Create a locally scoped writable signal that lives for the lifetime of the
+ * component. The returned signal can be used like any writable signal. The
+ * optional `watch` flag controls whether updates to this signal cause the
+ * component to re-render.
+ *
+ * @template T - type of the signal value
+ * @param {T} initialValue - initial value for the local signal
+ * @param {{readonly watch?: boolean}=} options - optional configuration
+ * @param {boolean} [options.watch] - when true, hook subscribes and triggers re-renders
+ * @returns {WritableSignal<T>} a writable signal bound to the component
+ */
 export function useLocalSignal<T>(
   initialValue: T,
   options?: { readonly watch?: boolean },
@@ -65,6 +94,18 @@ export function useLocalSignal<T>(
   return watchSignalChanges({ watch: options?.watch, signal: sig });
 }
 
+/**
+ * Create a computed signal inside a React component. The computation function
+ * is evaluated lazily and tracked; when dependencies change the computed value
+ * updates. The optional `watch` flag controls whether component re-renders
+ * occur when the computed value changes.
+ *
+ * @template T - computed value type
+ * @param {() => T} computationFn - function that computes the value
+ * @param {{readonly watch?: boolean}=} options - optional configuration
+ * @param {boolean} [options.watch] - when true, hook subscribes and triggers re-renders
+ * @returns {Signal<T>} a read-only signal representing the computed value
+ */
 export function useComputed<T>(
   computationFn: () => T,
   options?: { readonly watch?: boolean },
@@ -73,6 +114,23 @@ export function useComputed<T>(
   return watchSignalChanges({ watch: options?.watch, signal: sig });
 }
 
+/**
+ * Create a linked writable signal inside a React component. A linked signal is
+ * a writable signal whose value is derived from a computation or a source/
+ * computation pair and kept in sync automatically. This hook supports the
+ * same overloads as `linkedSignal` and accepts an optional `watch` config to
+ * control component re-renders.
+ *
+ * Overloads:
+ * - useLinkedSignal(computation: () => T, config?)
+ * - useLinkedSignal(options: LinkedSignalOptions<S, T>, config?)
+ *
+ * @template S - source type (when using options form)
+ * @template T - linked signal value type
+ * @param {LinkedSignalOptions<S, T> | (() => T)} optionsOrComputation - options object or plain computation
+ * @param {{watch: boolean}=} config - optional watch configuration
+ * @returns {WritableSignal<T>} a writable signal linked to the provided computation/source
+ */
 export function useLinkedSignal<T>(
   computation: () => T,
   config?: { watch: boolean },
@@ -92,6 +150,22 @@ export function useLinkedSignal<S, T>(
   return watchSignalChanges({ watch: config?.watch, signal: sig });
 }
 
+/**
+ * Hook to create and manage a resource inside a React component. The hook
+ * returns a ResourceRef that contains a value signal, status, loading flag,
+ * and error signal. The resource is automatically destroyed shortly after
+ * the component unmounts (unless re-mounted quickly), preventing memory leaks.
+ *
+ * This hook supports multiple overloads to accept resource loaders or stream
+ * style definitions with or without parameters.
+ *
+ * @template T - the type of the resource value
+ * @template R - the type of the request parameter (if applicable)
+ * @param {ResourceLoaderWithParams<T, R> | ResourceLoaderWithoutParams<T> | ResourceStreamWithParams<T, R> | ResourceStreamWithoutParams<T>} options - resource loader/stream options
+ * @param {{readonly watch?: boolean}=} config - optional configuration controlling whether React re-renders on resource signal updates
+ * @param {boolean} [config.watch] - when true, the hook subscribes to resource signals and triggers React updates
+ * @returns {ResourceRef<T>} a reference object for interacting with the resource
+ */
 export function useResource<T, R>(
   options: ResourceLoaderWithParams<T, R>,
 ): ResourceRef<T>;
