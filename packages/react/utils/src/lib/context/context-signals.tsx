@@ -1,4 +1,9 @@
-import { useSignalState, type WritableSignal } from '../signals';
+import {
+  effect,
+  untracked,
+  useLocalSignal,
+  type WritableSignal,
+} from '../signal';
 import React, { ConsumerProps } from 'react';
 import { BaseContextSignal } from './types';
 
@@ -14,23 +19,21 @@ export function createBaseContextSignal<T>(
     children,
     value,
   }: React.PropsWithChildren<{ value?: T }>) {
-    const state = useSignalState(value ?? options.factory());
+    const state = useLocalSignal(value ?? options.factory());
 
     React.useEffect(() => {
-      if (value !== undefined && !Object.is(state(), value)) {
-        state.set(value);
-      }
-    }, [value, state]);
+      const eRef = effect(() => {
+        if (value !== undefined && !Object.is(state(), value)) {
+          untracked(() => {
+            state.set(value);
+          });
+        }
+      });
 
-    const contextValue = React.useMemo(() => {
-      return Object.assign(() => state(), {
-        set: state.set,
-        update: state.update,
-        asReadOnly: state.asReadOnly,
-      }) satisfies WritableSignal<T>;
-    }, [state()]);
+      return () => eRef.destroy();
+    }, []);
 
-    return <Context.Provider value={contextValue}>{children}</Context.Provider>;
+    return <Context.Provider value={state}>{children}</Context.Provider>;
   }
 
   function useContext(): WritableSignal<T>;

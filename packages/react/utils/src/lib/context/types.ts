@@ -1,4 +1,4 @@
-import { WritableSignal } from '../signals';
+import { WritableSignal } from '../signal';
 import { ConsumerProps } from 'react';
 
 /**
