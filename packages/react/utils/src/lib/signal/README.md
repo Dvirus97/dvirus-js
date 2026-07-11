@@ -1,411 +1,252 @@
-# Signal Utilities for React
+# Signal utilities for React
+
+This folder contains the React-facing helpers for the signal system exported by `@dvirus-js/react`. It wraps the lower-level primitives from `@dvirus-js/utils/signals` and adds hooks, a reactive rendering component, and configuration helpers for React apps.
 
 ## Installation
 
 ```bash
-npm install @dvirus-js/react
+npm install @dvirus-js/react react
 ```
-
-```typescript
-import { signal, computed, effect, S, useSignal, useComputed } from '@dvirus-js/react';
-```
-
-## License
-
-MIT
-
-## Overview
-
-This package provides a fine-grained reactivity system inspired by frameworks like Angular, designed to work seamlessly with React. It offers signals, computed values, effects, and resources for efficient state management without the overhead of useState/useReducer re-renders for every update.
-
-The core signal implementation is framework-agnostic, but the provided hooks and components are optimized for React integration.
-
-## Core Concepts
-
-### Signals
-
-A `WritableSignal<T>` is a function that holds a value and notifies subscribers when that value changes. It provides:
-
-- Getter: `signal()` returns the current value
-- Setter: `signal.set(value)` updates the value
-- Updater: `signal.update(fn)` updates via a function
-- Subscriber: `signal.subscribe(callback)` returns an unsubscribe function
-- Read-only view: `signal.asReadonly()` returns a `Signal<T>` (getter + subscribe)
-
-### Computed
-
-A `computed<T>(fn: () => T): Signal<T>` creates a derived value that automatically updates when its dependencies (signals read inside `fn`) change.
-
-### Effect
-
-An `effect(fn: () => void): () => void` runs a function synchronously whenever its dependencies change and returns a cleanup function.
-
-### Resource
-
-A `resource<T, R>(options: ResourceOptions<T, R>): ResourceRef<T>` manages asynchronous data fetching with built-in loading, error, and reload states.
-
-## API Reference
-
-### Core Functions
-
-#### signal(initialValue: T): WritableSignal<T>
-
-Creates a writable signal.
 
 ```ts
-const count = signal(0);
-
-// Get value
-count(); // 0
-
-// Set value
-count.set(5);
-
-// Update with function
-count.update((n) => n + 1);
-
-// Subscribe
-const unsubscribe = count.subscribe(() => console.log('count changed'));
-// Later cleanup
-unsubscribe();
-
-// Read-only version
-const readonlyCount = count.asReadonly();
-readonlyCount(); // works
-// readonlyCount.set(5); // Error: Property 'set' does not exist
+import { signal, computed, useReadSignal, useLocalSignal, useComputed, useLinkedSignal, useResource, S, SignalConfigProvider } from '@dvirus-js/react';
 ```
 
-#### computed(fn: () => T): Signal<T>
+## What is in this folder?
 
-Creates a computed signal.
+- `hooks.ts` exposes React hooks for reading and creating signals inside components.
+- `components/` contains the reactive `S` component and structural helpers for conditional/list rendering.
+- `context/` exposes global and scoped configuration for signal watching behavior.
+- `index.ts` is the public entry point and re-exports everything above.
 
-```ts
-const count = signal(0);
-const doubled = computed(() => count() * 2);
+## Core signal primitives
 
-console.log(doubled()); // 0
-count.set(5);
-console.log(doubled()); // 10
-```
+The package re-exports the core primitives from `@dvirus-js/utils/signals`:
 
-#### effect(fn: () => void): () => void
+- `signal`
+- `computed`
+- `linkedSignal`
+- `resource`
+- `effect`
+- `untracked`
 
-Runs an effect and returns a cleanup function.
+These primitives are framework-agnostic. The React utilities in this folder make them easy to use inside components.
 
-```ts
-const count = signal(0);
-const stop = effect(() => {
-  console.log(`Count is now ${count()}`);
-});
+## React hooks
 
-// Later
-stop(); // stops the effect
-```
+### `useReadSignal(sig)`
 
-#### resource(options: ResourceOptions<T, R>): ResourceRef<T>
-
-Creates a resource for async data.
-
-```ts
-interface User { id: number; name: string }
-
-const userResource = resource({
-  request: () => userId(),
-  loader: ({ request: id, abortSignal }) =>
-    const data = fetch('/api/user/${id}');
-    return request.then(res => res.json()),
-});
-```
-
-#### batch(fn: () => void): void
-
-Executes a function while batching all signal updates inside it to prevent multiple notifications.
-
-```ts
-const count = signal(0);
-const name = signal('');
-
-batch(() => {
-  count.set(5);
-  name.set('John');
-  // Subscribers will only notify once after the batch
-});
-```
-
-#### untracked<T>(fn: () => T): T
-
-Executes a function without tracking its signal dependencies.
-
-```ts
-const count = signal(0);
-const name = signal('John');
-
-effect(() => {
-  console.log(`Name is ${name()}`); // This effect subscribes to name
-  // But we don't want to track count here
-  const countValue = untracked(() => count());
-  console.log(`Count is ${countValue} (but not tracked)`);
-});
-```
-
-### React Integration
-
-#### Hooks
-
-##### useSignal(initialValue: T): [WritableSignal<T>, (value: T) => void]
-
-Gets signal and subscribe the component to listen to changes.
-Return the value
+Reads a signal and subscribes the current component to updates. It returns the current value.
 
 ```tsx
-import { useSignal } from './hooks';
+import { signal, useReadSignal } from '@dvirus-js/react';
 
-const $count = signal(0);
+const count: WritableSignal<number> = signal(0);
 
 function Counter() {
-  const count = useSignal($count);
+  const value: number = useReadSignal(count);
 
-  return (
-    <div>
-      <p>Count: {count()}</p>
-      <button onClick={() => $count.update((c) => c + 1)}>Increment</button>
-    </div>
-  );
+  /* count.set(value + 1);  or  count.update(x => x + 1); */
+  return <button onClick={() => count.set(value + 1)}>{value}</button>;
 }
 ```
 
-##### useReactiveSignal<T>(initialValue: T): WritableSignal<T>
+### `useSignal(initialValue, options?)`
 
-create a local signal and subscribe the component to changes.
-uses `signal()` + `useSignal()` under the hood.
+Creates a component-scoped writable signal. By default the hook creates the signal and wires it to the component for re-rendering when `watchSignalChange` is enabled. You can disable that behavior with `{ watch: false }`.
 
 ```tsx
-function Counter() {
-  const count = useReactiveSignal(0);
+import { useLocalSignal } from '@dvirus-js/react';
 
-  return (
-    <div>
-      <p>Count: {count()}</p>
-      <button onClick={() => count.update((c) => c + 1)}>Increment</button>
-    </div>
-  );
+function Counter() {
+  const count: WritableSignal<number> = useLocalSignal(0);
+
+  return <button onClick={() => count.update((value) => value + 1)}>{count()}</button>;
 }
 ```
 
-##### useLocalSignal<T>(initialValue: T): WritableSignal<T>
+### `useComputed(fn, options?)`
 
-create a local signal and **NOT** subscribe the component.
-the component will not reRender for changes.
-
-This kook needs to be used with `S component`.
+Creates a computed signal inside a component. The computation is tracked lazily and updates when dependencies change.
 
 ```tsx
-function Counter() {
-  const count = useLocalSignal(0);
-
-  return (
-    <div>
-      <p>
-        Count: <S value={count} />
-      </p>
-      <button onClick={() => count.update((c) => c + 1)}>Increment</button>
-    </div>
-  );
-}
-```
-
-##### useComputed<T>(fn: () => T): Signal<T>
-
-Returns a computed signal that automatically updates when its dependencies change.
-
-```tsx
-// under the hood:
-useMemo(() => computed(computationFn), []);
-```
-
-```tsx
-import { useSignal, useComputed } from './hooks';
-
-const $count = signal(0);
+import { useComputed, useLocalSignal } from '@dvirus-js/react';
 
 function DoubleCounter() {
-  const doubled = useComputed(() => $count() * 2);
+  const count = useLocalSignal(0);
+  const doubled = useComputed(() => count() * 2);
 
   return (
     <div>
-      <p>Count: {$count()}</p>
-      <p>Doubled: {doubled()}</p>
-      <button onClick={() => $count.set($count() + 1)}>Increment</button>
+      <p>{count()}</p>
+      <p>{doubled()}</p>
     </div>
   );
 }
 ```
 
-##### useResource<T, R>(options: ResourceOptions<T, R>): ResourceRef<T>
+### `useLinkedSignal(...)`
 
-Returns a resource object for async operations.
+Creates a writable linked signal from either a computation or a linked-signal options object.
 
 ```tsx
-// under the hood:
-useMemo(() => resource(options), []);
+import { useLinkedSignal } from '@dvirus-js/react';
+
+function NameField() {
+  const name = useLinkedSignal(() => 'Anonymous');
+
+  return <input value={name()} onChange={(event) => name.set(event.target.value)} />;
+}
 ```
 
+### `useResource(options, config?)`
+
+Creates and manages a resource instance for async work. It returns a resource reference with signals such as `.value`, `.isLoading`, and `.error`.
+
 ```tsx
-import { useResource } from './hooks';
-import { SKIP } from './resource';
+import { useResource } from '@dvirus-js/react';
 
-// use SKIP symbol to tell the loader to not to run.
-// if you do not have reqParams, then return undefined
-
-function UserProfile() {
+function UserProfile({ userId }: { userId: string }) {
   const user = useResource({
-    request: () => userId() || SKIP,
-    loader: ({ request }) => {
-      fetch('/api/user').then((x) => x.json());
-    },
+    request: () => userId,
+    loader: ({ request }) => fetch(`/api/users/${request}`).then((res) => res.json()),
   });
 
-  if (user.isLoading()) return <p>Loading...</p>;
-  if (user.error()) return <p>Error: {String(user.error())}</p>;
+  if (user.isLoading()) {
+    return <p>Loading…</p>;
+  }
 
-  return (
-    <div>
-      <h1>{user.value()?.name}</h1>
-      <p>Email: {user.value()?.email}</p>
-      <button onClick={() => user.reload()}>Refresh</button>
-    </div>
-  );
+  return <pre>{JSON.stringify(user.value(), null, 2)}</pre>;
 }
 ```
 
-#### Components
+## Reactive rendering with `S`
 
-##### S Component
+`S` is a reactive component that can render text, conditionally render branches, render lists, and bind reactive DOM props.
 
-A smart component that automatically subscribes to signals to change the DOM.
-the father component will not reRender.
+> If a signal is not bound to the component reRendering, then the only way to see changes is with `S` component
+
+### Text rendering
 
 ```tsx
-import { S } from './components';
-import { useLocalSignal } from './signal';
+import { S, useSignal } from '@dvirus-js/react';
 
 function Greeting() {
-  const name = useLocalSignal('World');
-  const isLoggedIn = useLocalSignal(true);
+  const name = useSignal('World', { watch: false });
 
   return (
     <h1>
-      {/*
-        - Will re-render when name() changes
-        - change the DOM directly.
+      {/* if name change, only the S component will reRender
+      - because signal is function, can also be used like this: <S value={name} /> 
       */}
-      Hello, <S value={name}/>!
+      Hello <S value={() => name()} />!
     </h1>
-
-     {/* Conditional rendering */}
-     <S $if={isLoggedIn}>
-       <p>Welcome back!</p>
-     </S>
-
-      <S
-        $style={()=> {
-          return {color: isLoggedIn() ? 'green' : 'red'};
-        }}
-      >
-        <h2>log in</h2>
-      </S>
   );
 }
 ```
 
-###### Conditional Rendering with `$if`
+### `AS` Prop
 
-The `$if` prop expects a signal or function that returns a boolean. When false, children are not rendered.
+pass `as` prop with a name of a tag (div, span, a, button...) to convert the S comp to an element.
 
-```tsx
-const showMessage = signal(true);
-
-<S $if={showMessage}>
-  <p>This message is conditionally shown.</p>
-</S>;
-
-// To toggle:
-showMessage.set(false); // hides the message
-```
-
-###### List Rendering with `$for`
-
-The `$for` prop expects an object with:
-
-- `each`: a signal or function returning an array
-- `render`: function(item, index) => ReactNode
-- `track` (optional): function(item, index) => string|number for stable keys
+- `as with $if` - ignored (`<S as="div" $if={()=> true}>`)
+- `as with $for` - change the wrapper of the list from Fragment (`<></>`) to the element.
+- `as with value` - instead of rendering text, the value become an attribute in the element
+  - ex: `<S as="input" value={()=>"hello"}>` => `<input value="hello">`
+  - ex: `<S as="div" value={()=>"hello"}>` => `<div value="hello">`
 
 ```tsx
-const items = signal([
-  { id: 1, text: 'Learn signals' },
-  { id: 2, text: 'Build apps' }
-]);
+import { S, useSignal } from '@dvirus-js/react';
 
-<S $for={{
-  each: items,
-  render: (item) => <div key={item.id}>{item.text}</div>
-}}>
-  {/* Optional fallback when list is empty */}
-  <p>No items</p>
-</S>
+function Component() {
+  const disabled = useSignal(false, { watch: false });
 
-// With custom tracking function
-<S $for={{
-  each: items,
-  render: (item) => <div>{item.text}</div>,
-  track: (item) => item.id  // use id as key
-}}>
-  <p>Loading...</p>
-</S>
+  return (
+    <S as="button" $disabled={disabled} onClick={() => disabled.set(true)}>
+      click me!
+    </S>
+  );
+}
 ```
 
-## Connection to React
+### Conditional rendering with `$if`
 
-While the core signal implementation (`signal`, `computed`, `effect`, `resource`) is framework-agnostic and can be used with any UI library (or none), the provided React-specific utilities bridge the gap:
+```tsx
+import { S, useSignal } from '@dvirus-js/react';
 
-### Hooks (`useSignal`, `useComputed`, `useResource`)
+function Banner() {
+  const show = useSignal(true, { watch: false });
 
-- Use `useSyncExternalStore` to subscribe to signal changes and trigger React re-renders.
-- `useSignal` returns `WritableSignal`.
-- `useComputed` returns a computed signal that can be used in JSX or other hooks.
-- `useResource` returns a resource object with signals for data, status, etc.
+  return (
+    {/*  only the S component and its children will reRender */}
+    <S $if={() => show()}>
+      <p>Visible</p>
+    </S>
+  );
+}
+```
 
-### Components (`S`, `If`, `For`)
+### List rendering with `$for`
 
-- The `S` component is the cornerstone of reactive rendering in JSX:
-  - Automatically tracks signals used in its children via `useComputed` internally
-  - Provides `$if` and `$for` props for declarative conditional/list rendering based on signals
-  - Eliminates manual dependency arrays in `useEffect` for signal-based rendering
+- each: the data signal. can also be used like this: `each: items`
+- track: use like the `key` prop. if not pass, defaults to index.
+- children: function that get the current item, and return element.
 
-### Effects
+```tsx
+import { S, useSignal } from '@dvirus-js/react';
 
-- The core `effect` function runs synchronously when signals change, outside React's render cycle.
-- For side effects that need to align with React's lifecycle (e.g., subscriptions, DOM mutations), use `useEffect` with signals:
+function TodoList() {
+  const items = useSignal([{ id: 1, label: 'Learn signals' }]);
 
-  ```tsx
-  useEffect(() => {
-    const subscription = someSignal.subscribe(updateSomething);
-    return () => subscription.unsubscribe();
-  }, [someSignal]); // Note: This resubscribes when someSignal changes (rarely needed)
-  ```
+  return (
+    <S
+      $for={{
+        each: () => items(),
+        track: (item) => item.id,
+      }}
+    >
+      {(item) => <li>{item.label}</li>}
+    </S>
+  );
+}
+```
 
-  ```tsx
-  useEffect(() => {
-    const clean = effect(() => {
-      const val = someSignal();
-      // do something
-    });
+### Reactive DOM props
 
-    return () => {
-      clean();
-    };
-  }, []); // run once and listen in signal world
-  ```
+Props that start with `$` are treated as reactive callbacks that receive the current value from the signal system.
 
-  For most cases, prefer wrapping side effects in `effect()` and calling it in `useEffect` with an empty deps array if the effect should persist for the component's lifetime.
+- props prefix with `$` receive function as value.
+  - $src={()=> 'http://'}
+  - $disabled={disabled} // disabled is signal (signal is fn)
+
+```tsx
+import { S, useSignal } from '@dvirus-js/react';
+
+function StatusBadge() {
+  const isActive = useSignal(true);
+
+  return <S $className={() => (isActive() ? 'active' : 'inactive')} />;
+}
+```
+
+## Configuration
+
+The signal hooks use a shared configuration object to decide whether they should subscribe to signal changes and trigger React re-renders. You can override the default globally or for a subtree.
+
+```tsx
+import { SignalConfigProvider } from '@dvirus-js/react';
+
+function App() {
+  return (
+    <SignalConfigProvider options={{ watchSignalChange: false }}>
+      <MyTree />
+    </SignalConfigProvider>
+  );
+}
+```
+
+## Notes
+
+- `useReadSignal` returns the current value of the signal, not a tuple.
+- `useLocalSignal` is useful for local state that should not automatically subscribe unless you opt in with `watch: true`.
+- `S` is the preferred way to render reactive text, conditionals, and lists without manually wiring subscriptions into the component tree.

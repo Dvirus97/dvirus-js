@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { useComputed, useSignal } from '../hooks';
+import { useComputed, useReadSignal } from '../hooks';
 import { For } from './For';
 import { ConditionalRender, ElseSlot, ThenSlot } from './If';
 import { effect } from '@dvirus-js/utils/signals';
@@ -84,7 +84,7 @@ export function S<
   // a) If it's simple text or a number that needs to be rendered with peak performance
   if (value && !as) {
     const val = useComputed(value);
-    const currentVal = useSignal(val);
+    const currentVal = useReadSignal(val);
     return <>{currentVal}</>;
   }
 

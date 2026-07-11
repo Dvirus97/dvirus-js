@@ -51,10 +51,10 @@ function watchSignalChanges<T, TSignal extends Signal<T> = Signal<T>>(options: {
   signal: TSignal;
 }): TSignal {
   if (options.watch ?? getSignalsConfig().watchSignalChange) {
-    useSignal(options.signal);
+    useReadSignal(options.signal);
     return Object.assign(() => options.signal(), options.signal);
   } else {
-    useSignal(dummySignal);
+    useReadSignal(dummySignal);
     return options.signal;
   }
 }
@@ -68,10 +68,31 @@ function watchSignalChanges<T, TSignal extends Signal<T> = Signal<T>>(options: {
  * @param {Signal<T>} sig - the signal to read and subscribe to
  * @returns {T} the current value of the provided signal
  */
-export function useSignal<T>(sig: Signal<T>): T {
+export function useReadSignal<T>(sig: Signal<T>): T {
   return React.useSyncExternalStore(sig.subscribe, () => {
     return untracked(sig);
   });
+}
+
+/**
+ * Create a locally scoped writable signal that lives for the lifetime of the
+ * component. This function is the canonical hook to create component-scoped
+ * signals and is identical in behavior to `useLocalSignal` (kept for
+ * backward-compatibility). The optional `watch` flag controls whether updates
+ * to this signal cause the component to re-render.
+ *
+ * @template T - type of the signal value
+ * @param {T} initialValue - initial value for the local signal
+ * @param {{readonly watch?: boolean}=} options - optional configuration
+ * @param {boolean} [options.watch] - when true, hook subscribes and triggers re-renders
+ * @returns {WritableSignal<T>} a writable signal bound to the component
+ */
+export function useSignal<T>(
+  initialValue: T,
+  options?: { readonly watch?: boolean },
+): WritableSignal<T> {
+  const sig = React.useMemo(() => signal<T>(initialValue), []);
+  return watchSignalChanges({ watch: options?.watch, signal: sig });
 }
 
 /**
