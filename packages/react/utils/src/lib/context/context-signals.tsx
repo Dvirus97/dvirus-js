@@ -1,9 +1,4 @@
-import {
-  effect,
-  untracked,
-  useLocalSignal,
-  type WritableSignal,
-} from '../signal';
+import { effect, untracked, useSignal, type WritableSignal } from '../signal';
 import React, { ConsumerProps } from 'react';
 import { BaseContextSignal } from './types';
 
@@ -19,7 +14,7 @@ export function createBaseContextSignal<T>(
     children,
     value,
   }: React.PropsWithChildren<{ value?: T }>) {
-    const state = useLocalSignal(value ?? options.factory());
+    const state = useSignal(value ?? options.factory());
 
     React.useEffect(() => {
       const eRef = effect(() => {

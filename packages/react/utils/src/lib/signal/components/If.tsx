@@ -1,5 +1,5 @@
 import React from 'react';
-import { useComputed, useReadSignal } from '../hooks';
+import { useComputed, useSignalValue } from '../hooks';
 
 // 🌟 Named structural selector directives
 /**
@@ -39,7 +39,7 @@ export function ConditionalRender({
   children: React.ReactNode;
 }) {
   const _condition = useComputed(condition);
-  const shouldRender = useReadSignal(_condition);
+  const shouldRender = useSignalValue(_condition);
 
   let thenBranch: React.ReactNode = null;
   let elseBranch: React.ReactNode = null;

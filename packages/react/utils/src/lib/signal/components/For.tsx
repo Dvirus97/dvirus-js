@@ -1,4 +1,4 @@
-import { useComputed, useReadSignal } from '../hooks';
+import { useComputed, useSignalValue } from '../hooks';
 import React from 'react';
 
 interface ForProps<Item, As extends keyof React.JSX.IntrinsicElements> {
@@ -40,7 +40,7 @@ export function For<
     React.Fragment) as keyof React.JSX.IntrinsicElements;
 
   const _each = useComputed(each);
-  const list = useReadSignal(_each);
+  const list = useSignalValue(_each);
 
   return (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

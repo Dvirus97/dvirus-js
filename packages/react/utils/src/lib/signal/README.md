@@ -9,7 +9,7 @@ npm install @dvirus-js/react react
 ```
 
 ```ts
-import { signal, computed, useReadSignal, useLocalSignal, useComputed, useLinkedSignal, useResource, S, SignalConfigProvider } from '@dvirus-js/react';
+import { signal, computed, useSignalValue, useComputed, useLinkedSignal, useResource, S, SignalConfigProvider } from '@dvirus-js/react';
 ```
 
 ## What is in this folder?
@@ -34,17 +34,17 @@ These primitives are framework-agnostic. The React utilities in this folder make
 
 ## React hooks
 
-### `useReadSignal(sig)`
+### `useSignalValue(sig)`
 
 Reads a signal and subscribes the current component to updates. It returns the current value.
 
 ```tsx
-import { signal, useReadSignal } from '@dvirus-js/react';
+import { signal, useSignalValue } from '@dvirus-js/react';
 
 const count: WritableSignal<number> = signal(0);
 
 function Counter() {
-  const value: number = useReadSignal(count);
+  const value: number = useSignalValue(count);
 
   /* count.set(value + 1);  or  count.update(x => x + 1); */
   return <button onClick={() => count.set(value + 1)}>{value}</button>;
@@ -56,10 +56,10 @@ function Counter() {
 Creates a component-scoped writable signal. By default the hook creates the signal and wires it to the component for re-rendering when `watchSignalChange` is enabled. You can disable that behavior with `{ watch: false }`.
 
 ```tsx
-import { useLocalSignal } from '@dvirus-js/react';
+import { useSignalValue } from '@dvirus-js/react';
 
 function Counter() {
-  const count: WritableSignal<number> = useLocalSignal(0);
+  const count: WritableSignal<number> = useSignalValue(0);
 
   return <button onClick={() => count.update((value) => value + 1)}>{count()}</button>;
 }
@@ -70,10 +70,10 @@ function Counter() {
 Creates a computed signal inside a component. The computation is tracked lazily and updates when dependencies change.
 
 ```tsx
-import { useComputed, useLocalSignal } from '@dvirus-js/react';
+import { useComputed, useSignalValue } from '@dvirus-js/react';
 
 function DoubleCounter() {
-  const count = useLocalSignal(0);
+  const count = useSignalValue(0);
   const doubled = useComputed(() => count() * 2);
 
   return (
@@ -247,6 +247,6 @@ function App() {
 
 ## Notes
 
-- `useReadSignal` returns the current value of the signal, not a tuple.
-- `useLocalSignal` is useful for local state that should not automatically subscribe unless you opt in with `watch: true`.
+- `useSignalValue` returns the current value of the signal, not a tuple.
+- `useSignal` is useful for local state that should not automatically subscribe unless you opt in with `watch: true`.
 - `S` is the preferred way to render reactive text, conditionals, and lists without manually wiring subscriptions into the component tree.
