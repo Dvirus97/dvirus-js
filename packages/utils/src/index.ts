@@ -12,3 +12,4 @@ export * from './lib/brand-type';
 export * from './lib/get-empty-keys';
 export * from './lib/serializer';
 export * from './lib/types';
+export * from './lib/interval';

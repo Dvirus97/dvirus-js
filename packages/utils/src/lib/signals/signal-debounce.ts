@@ -18,6 +18,15 @@ export interface SignalDebounce<T> extends WritableSignal<T> {
   destroy: () => void;
 }
 
+export interface SignalDebounceOptions<T> {
+  /** Optional reactive source function whose return value is tracked and debounced into the signal. */
+  source?: () => T;
+  /** Delay in milliseconds before a debounced value is committed. */
+  debounceTime: number;
+  /** Optional initial value for the signal. */
+  initialValue?: T;
+}
+
 /**
  * Creates a debounced writable signal.
  *
@@ -51,11 +60,9 @@ export interface SignalDebounce<T> extends WritableSignal<T> {
  * const debounced = signalDebounce({ source: () => query(), debounceTime: 500 });
  * ```
  */
-export function signalDebounce<T>(options: {
-  source?: () => T;
-  debounceTime: number;
-  initialValue?: T;
-}): SignalDebounce<T> {
+export function signalDebounce<T>(
+  options: SignalDebounceOptions<T>,
+): SignalDebounce<T> {
   const timeout = signal<ReturnType<typeof setTimeout> | null>(null);
   const isLoading = signal(false);
   const _sig = signal(options.initialValue) as WritableSignal<T>;

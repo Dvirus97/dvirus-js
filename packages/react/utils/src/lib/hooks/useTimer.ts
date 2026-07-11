@@ -1,4 +1,7 @@
-import React, { useEffect } from 'react';
+import { Signal, untracked } from '@dvirus-js/utils/signals';
+import React from 'react';
+import { useSignal } from '../signals';
+import { startDriftAwareInterval } from '@dvirus-js/utils';
 
 /**
  * Function-like timer accessor returned by useTimer.
@@ -6,12 +9,7 @@ import React, { useEffect } from 'react';
  * Call the function to get the latest timer count,
  * or call `clear` to stop future ticks.
  */
-export interface TimerGetter {
-  /**
-   * Returns the latest timer value.
-   */
-  (): number;
-
+export interface SignalTimerRef extends Signal<number> {
   /**
    * Stops the active timer and prevents future ticks.
    */
@@ -57,79 +55,111 @@ export interface UseTimerOptions {
  * @param options - Timer configuration.
  * @returns A callable getter for the latest timer value, with a `clear()` method to stop the timer.
  */
-export function useTimer(options: UseTimerOptions): TimerGetter {
-  const { fn, interval = 1000, tickOnce = false, resetTo } = options;
 
-  const [, setCount] = React.useState(0);
-  const countRef = React.useRef(0);
-  const timerRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
-  const callbackRef = React.useRef(fn);
+export function useTimer(options: UseTimerOptions): SignalTimerRef {
+  const { interval = 1000, tickOnce = false } = options;
+  const count = useSignal(0, { watch: false });
+  const optionsRef = React.useRef(options);
+  optionsRef.current = options;
   const clearRef = React.useRef<() => void>(() => 0);
-  const [wrapper] = React.useState(() => {
-    let value = 0;
 
-    const getter = (() => value) as TimerGetter;
-    getter.clear = () => clearRef.current();
+  React.useEffect(() => {
+    clearRef.current();
 
-    return {
-      getter,
-      setValue(next: number) {
-        value = next;
-      },
-    };
-  });
-
-  useEffect(() => {
-    callbackRef.current = fn;
-  }, [fn]);
-
-  const clear = React.useCallback(() => {
-    if (timerRef.current !== undefined) {
-      clearTimeout(timerRef.current);
-      timerRef.current = undefined;
-    }
-  }, []);
-
-  useEffect(() => {
-    clearRef.current = clear;
-  }, [clear]);
-
-  useEffect(() => {
-    clear();
-
-    if (!Number.isFinite(interval) || interval <= 0) {
-      return clear;
-    }
-
-    const startAt = performance.now();
-    let tick = 0;
-
-    const scheduleNext = () => {
-      tick += 1;
-      const targetTime = startAt + tick * interval;
-      const delay = Math.max(0, targetTime - performance.now());
-
-      timerRef.current = setTimeout(() => {
-        const currentValue = countRef.current;
-        const resetValue = resetTo ? resetTo(currentValue) : undefined;
+    clearRef.current = startDriftAwareInterval({
+      interval,
+      tickOnce,
+      onTick: () => {
+        const currentValue = untracked(count);
+        const resetValue = optionsRef.current.resetTo?.(currentValue);
         const nextValue = resetValue ?? currentValue + 1;
 
-        countRef.current = nextValue;
-        wrapper.setValue(nextValue);
-        setCount(nextValue);
-        callbackRef.current?.({ value: nextValue });
+        count.set(nextValue);
+        optionsRef.current.fn?.({ value: nextValue });
+      },
+    });
 
-        if (!tickOnce) {
-          scheduleNext();
-        }
-      }, delay);
-    };
+    return () => clearRef.current();
+  }, [interval, tickOnce]);
 
-    scheduleNext();
-    return clear;
-  }, [clear, interval, tickOnce, resetTo]);
+  const clear = React.useCallback(() => clearRef.current(), []);
 
-  return wrapper.getter;
+  return Object.assign(count.asReadonly(), { clear });
 }
+
+// export function useTimer(options: UseTimerOptions): TimerGetter {
+//   const { fn, interval = 1000, tickOnce = false, resetTo } = options;
+
+//   const [, setCount] = React.useState(0);
+//   const countRef = React.useRef(0);
+//   const timerRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(
+//     undefined,
+//   );
+//   const callbackRef = React.useRef(fn);
+//   const clearRef = React.useRef<() => void>(() => 0);
+//   const [wrapper] = React.useState(() => {
+//     let value = 0;
+
+//     const getter = (() => value) as TimerGetter;
+//     getter.clear = () => clearRef.current();
+
+//     return {
+//       getter,
+//       setValue(next: number) {
+//         value = next;
+//       },
+//     };
+//   });
+
+//   useEffect(() => {
+//     callbackRef.current = fn;
+//   }, [fn]);
+
+//   const clear = React.useCallback(() => {
+//     if (timerRef.current !== undefined) {
+//       clearTimeout(timerRef.current);
+//       timerRef.current = undefined;
+//     }
+//   }, []);
+
+//   useEffect(() => {
+//     clearRef.current = clear;
+//   }, [clear]);
+
+//   useEffect(() => {
+//     clear();
+
+//     if (!Number.isFinite(interval) || interval <= 0) {
+//       return clear;
+//     }
+
+//     const startAt = performance.now();
+//     let tick = 0;
+
+//     const scheduleNext = () => {
+//       tick += 1;
+//       const targetTime = startAt + tick * interval;
+//       const delay = Math.max(0, targetTime - performance.now());
+
+//       timerRef.current = setTimeout(() => {
+//         const currentValue = countRef.current;
+//         const resetValue = resetTo ? resetTo(currentValue) : undefined;
+//         const nextValue = resetValue ?? currentValue + 1;
+
+//         countRef.current = nextValue;
+//         wrapper.setValue(nextValue);
+//         setCount(nextValue);
+//         callbackRef.current?.({ value: nextValue });
+
+//         if (!tickOnce) {
+//           scheduleNext();
+//         }
+//       }, delay);
+//     };
+
+//     scheduleNext();
+//     return clear;
+//   }, [clear, interval, tickOnce, resetTo]);
+
+//   return wrapper.getter;
+// }

@@ -10,6 +10,9 @@ import {
   ResourceStreamWithParams,
   Signal,
   signal,
+  SignalDebounce,
+  signalDebounce,
+  SignalDebounceOptions,
   untracked,
   WritableSignal,
 } from '@dvirus-js/utils/signals';
@@ -231,4 +234,20 @@ export function useResource<T, R>(
   }, []);
 
   return resourceRef.current;
+}
+
+/**
+ * Hook to create a debounced signal inside a React component.
+ * The hook returns a SignalDebounce object that provides methods to set debounced values, check loading state, and subscribe to changes.
+ * The optional `watch` flag controls whether component re-renders occur when the debounced signal changes.
+ * @param options
+ * @param config
+ * @returns
+ */
+export function useSignalDebounce<T>(
+  options: SignalDebounceOptions<T>,
+  config?: { watch?: boolean },
+): SignalDebounce<T> {
+  const sig = React.useMemo(() => signalDebounce<T>(options), []);
+  return watchSignalChanges({ watch: config?.watch, signal: sig });
 }
