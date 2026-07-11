@@ -1,4 +1,4 @@
-import { effect, untracked, useSignal, type WritableSignal } from '../signal';
+import { effect, untracked, useSignal, type WritableSignal } from '../signals';
 import React, { ConsumerProps } from 'react';
 import { BaseContextSignal } from './types';
 
