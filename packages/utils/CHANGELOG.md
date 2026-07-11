@@ -1,3 +1,15 @@
+## 0.0.28 (2026-07-11)
+
+### 🩹 Fixes
+
+- signal debounce hook + useTimer ([348fcb9](https://github.com/Dvirus97/dvirus-js/commit/348fcb9))
+- signal - add JSDoc comments to signal utilities and components ([4ccaa52](https://github.com/Dvirus97/dvirus-js/commit/4ccaa52))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Dvir Cohen
+
 ## 0.0.27 (2026-07-10)
 
 ### 🩹 Fixes

@@ -1,3 +1,7 @@
+## 0.0.28 (2026-07-11)
+
+This was a version bump only for web to align it with other projects, there were no code changes.
+
 ## 0.0.27 (2026-07-10)
 
 This was a version bump only for web to align it with other projects, there were no code changes.
