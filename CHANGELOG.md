@@ -1,3 +1,13 @@
+## 0.0.36 (2026-07-12)
+
+### 🩹 Fixes
+
+- trigger update ([bc177b3](https://github.com/Dvirus97/dvirus-js/commit/bc177b3))
+
+### ❤️ Thank You
+
+- Dvir Cohen
+
 ## 0.0.34 (2026-07-12)
 
 ### 🩹 Fixes

@@ -1,3 +1,7 @@
+## 0.0.36 (2026-07-12)
+
+This was a version bump only for angular-signals to align it with other projects, there were no code changes.
+
 ## 0.0.34 (2026-07-12)
 
 This was a version bump only for signals to align it with other projects, there were no code changes.
