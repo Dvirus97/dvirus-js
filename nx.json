@@ -47,9 +47,9 @@
       "conventionalCommits": false
     },
     "projects": [
-      "angular-utils",
+      "angular",
       "react",
-      "signals",
+      "angular-signals",
       "web",
       "utils"
     ],

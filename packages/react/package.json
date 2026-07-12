@@ -1,0 +1,28 @@
+{
+  "name": "@dvirus-js/react",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./signals": {
+      "types": "./signals.d.ts",
+      "default": "./signals.js"
+    }
+  },
+  "dependencies": {
+    "@types/react": "^19.2.15",
+    "@dvirus-js/utils": "~0.0.1",
+    "tslib": "^2.3.0"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

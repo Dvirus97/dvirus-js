@@ -3,19 +3,17 @@
   "version": "0.0.1",
   "type": "module",
   "main": "./index.js",
+  "types": "./index.d.ts",
   "exports": {
     ".": {
-      "types": "./index.d.ts",
       "import": "./index.js",
-      "default": "./index.js"
+      "types": "./index.d.ts"
     },
     "./signals": {
-      "types": "./signals.d.ts",
       "import": "./signals.js",
-      "default": "./signals.js"
+      "types": "./signals.d.ts"
     }
   },
-  "types": "./index.d.ts",
   "dependencies": {},
   "publishConfig": {
     "access": "public"

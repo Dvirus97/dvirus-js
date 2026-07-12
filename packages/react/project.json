@@ -1,0 +1,39 @@
+{
+  "name": "react",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/react/utils/src",
+  "projectType": "library",
+  "release": {
+    "version": {
+      "manifestRootsToUpdate": [
+        "dist/{projectRoot}"
+      ],
+      "currentVersionResolver": "git-tag",
+      "fallbackCurrentVersionResolver": "disk"
+    }
+  },
+  "tags": [],
+  "targets": {
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist/{projectRoot}"
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/packages/react/utils",
+        "main": "packages/react/utils/src/index.ts",
+        "tsConfig": "packages/react/utils/tsconfig.lib.json",
+        "rootDir": "packages/react/utils/src",
+        "additionalEntryPoints": [
+          "packages/react/utils/src/signals.ts"
+        ],
+        "generateExportsField": false
+      }
+    }
+  }
+}

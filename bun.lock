@@ -56,6 +56,46 @@
         "vitest": "^4.0.0",
       },
     },
+    "packages/angular/angular-utils": {
+      "name": "@dvirus-js/angular",
+      "version": "0.0.2",
+      "peerDependencies": {
+        "@angular/core": ">=16.0.0 <22.0.0",
+        "@angular/forms": ">=16.0.0 <22.0.0",
+      },
+    },
+    "packages/angular/signals": {
+      "name": "@dvirus-js/angular-signals",
+      "version": "0.0.1",
+      "peerDependencies": {
+        "@angular/core": ">=16.0.0 <22.0.0",
+        "@angular/forms": ">=16.0.0 <22.0.0",
+        "rxjs": "^7.0.0",
+      },
+    },
+    "packages/react/utils": {
+      "name": "@dvirus-js/react",
+      "version": "0.0.1",
+      "dependencies": {
+        "@dvirus-js/utils": "~0.0.1",
+        "@types/react": "^19.2.15",
+        "tslib": "^2.3.0",
+      },
+      "peerDependencies": {
+        "react": ">=18",
+      },
+    },
+    "packages/utils": {
+      "name": "@dvirus-js/utils",
+      "version": "0.0.1",
+    },
+    "packages/web": {
+      "name": "@dvirus-js/web",
+      "version": "0.0.1",
+      "dependencies": {
+        "@dvirus-js/utils": "~0.0.1",
+      },
+    },
   },
   "packages": {
     "@algolia/abtesting": ["@algolia/abtesting@1.12.2", "", { "dependencies": { "@algolia/client-common": "5.46.2", "@algolia/requester-browser-xhr": "5.46.2", "@algolia/requester-fetch": "5.46.2", "@algolia/requester-node-http": "5.46.2" } }, "sha512-oWknd6wpfNrmRcH0vzed3UPX0i17o4kYLM5OMITyMVM2xLgaRbIafoxL0e8mcrNNb0iORCJA0evnNDKRYth5WQ=="],
@@ -323,6 +363,16 @@
     "@bufbuild/protobuf": ["@bufbuild/protobuf@2.11.0", "", {}, "sha512-sBXGT13cpmPR5BMgHE6UEEfEaShh5Ror6rfN3yEK5si7QVrtZg8LEPQb0VVhiLRUslD2yLnXtnRzG035J/mZXQ=="],
 
     "@cypress/request": ["@cypress/request@3.0.9", "", { "dependencies": { "aws-sign2": "~0.7.0", "aws4": "^1.8.0", "caseless": "~0.12.0", "combined-stream": "~1.0.6", "extend": "~3.0.2", "forever-agent": "~0.6.1", "form-data": "~4.0.4", "http-signature": "~1.4.0", "is-typedarray": "~1.0.0", "isstream": "~0.1.2", "json-stringify-safe": "~5.0.1", "mime-types": "~2.1.19", "performance-now": "^2.1.0", "qs": "6.14.0", "safe-buffer": "^5.1.2", "tough-cookie": "^5.0.0", "tunnel-agent": "^0.6.0", "uuid": "^8.3.2" } }, "sha512-I3l7FdGRXluAS44/0NguwWlO83J18p0vlr2FYHrJkWdNYhgVoiYo61IXPqaOsL+vNxU1ZqMACzItGK3/KKDsdw=="],
+
+    "@dvirus-js/angular": ["@dvirus-js/angular@workspace:packages/angular/angular-utils"],
+
+    "@dvirus-js/angular-signals": ["@dvirus-js/angular-signals@workspace:packages/angular/signals"],
+
+    "@dvirus-js/react": ["@dvirus-js/react@workspace:packages/react/utils"],
+
+    "@dvirus-js/utils": ["@dvirus-js/utils@workspace:packages/utils"],
+
+    "@dvirus-js/web": ["@dvirus-js/web@workspace:packages/web"],
 
     "@emnapi/core": ["@emnapi/core@1.8.1", "", { "dependencies": { "@emnapi/wasi-threads": "1.1.0", "tslib": "^2.4.0" } }, "sha512-AvT9QFpxK0Zd8J0jopedNm+w/2fIzvtPKPjqyw9jwvBaReTTqPBk9Hixaz7KbjimP+QNz605/XnjFcDAL2pqBg=="],
 

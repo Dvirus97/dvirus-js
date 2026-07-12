@@ -11,7 +11,7 @@ export interface RequestInit extends globalThis.RequestInit {
 interface _Response<T>
   extends Omit<
     globalThis.Response,
-    'body' | 'json' | 'text' | 'blob' | 'arrayBuffer'
+    'body' | 'json' | 'text' | 'blob' | 'arrayBuffer' | 'bytes'
   > {
   data: T;
 }

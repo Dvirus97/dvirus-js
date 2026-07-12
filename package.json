@@ -11,6 +11,10 @@
   "publishConfig": {
     "access": "public"
   },
+  "workspaces": [
+    "packages/*",
+    "packages/*/*"
+  ],
   "devDependencies": {
     "@angular-devkit/core": "~21.1.0",
     "@angular-devkit/schematics": "~21.1.0",
