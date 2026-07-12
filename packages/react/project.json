@@ -1,7 +1,7 @@
 {
   "name": "react",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/react/utils/src",
+  "sourceRoot": "packages/react/src",
   "projectType": "library",
   "release": {
     "version": {
@@ -25,12 +25,12 @@
         "{options.outputPath}"
       ],
       "options": {
-        "outputPath": "dist/packages/react/utils",
-        "main": "packages/react/utils/src/index.ts",
-        "tsConfig": "packages/react/utils/tsconfig.lib.json",
-        "rootDir": "packages/react/utils/src",
+        "outputPath": "dist/packages/react",
+        "main": "packages/react/src/index.ts",
+        "tsConfig": "packages/react/tsconfig.lib.json",
+        "rootDir": "packages/react/src",
         "additionalEntryPoints": [
-          "packages/react/utils/src/signals.ts"
+          "packages/react/src/signals.ts"
         ],
         "generateExportsField": false
       }
